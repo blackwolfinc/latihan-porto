@@ -1,0 +1,32 @@
+.login-container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    flex-direction: column; 
+    gap: 20px;
+}
+
+.remember-container{
+    display: flex;
+    gap: 20px;
+}
+
+.button-custom{
+    min-width: 15rem;
+    border-radius: 8px;
+    box-shadow: none;
+    border: none;
+    padding: 8px 20px;
+
+}
+
+input#input{
+    max-width: 15rem;
+    padding: 8px 10px ;
+    border: 1px solid gray;
+    }
+
+body{
+    background-color: rgba(172, 172, 172, 0.243);
+}
