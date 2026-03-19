@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Menu, Avatar, Dropdown, Badge, Space, Typography, theme } from 'antd';
+import { Layout, Menu, Avatar, Dropdown, Badge, Space, Typography, Select, theme } from 'antd';
 import {
   DashboardOutlined,
   CarOutlined,
@@ -21,9 +21,12 @@ import {
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  GlobalOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth.store';
+import { t, LANGUAGES, Language } from '@/i18n';
+import { useLanguageStore } from '@/stores/language.store';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;

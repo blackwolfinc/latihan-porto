@@ -132,11 +132,13 @@ model User {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
-  driver        Driver?
-  bookings      Booking[] @relation("CustomerBookings")
-  reviews       Review[]
-  notifications Notification[]
-  inspections   Inspection[] @relation("InspectorInspections")
+  driver           Driver?
+  bookings         Booking[] @relation("CustomerBookings")
+  reviews          Review[]
+  notifications    Notification[]
+  inspections      Inspection[] @relation("InspectorInspections")
+  verification     CustomerVerification?
+  blacklistReports CustomerBlacklist[] @relation("BlacklistReporter")
 
   @@map("users")
 }
@@ -468,4 +470,67 @@ model InvoiceItem {
   amount      Decimal @db.Decimal(12, 2)
 
   @@map("invoice_items")
+}
+
+enum VerificationStatus {
+  PENDING
+  IN_REVIEW
+  VERIFIED
+  REJECTED
+}
+
+enum BlacklistReason {
+  FRAUD
+  THEFT
+  DAMAGE
+  NON_PAYMENT
+  TRAFFIC_VIOLATION
+  ACCIDENT
+  OVERDUE
+  OTHER
+}
+
+model CustomerVerification {
+  id                 String             @id @default(cuid())
+  userId             String             @unique
+  user               User               @relation(fields: [userId], references: [id])
+  ktpNumber          String?
+  ktpName            String?
+  ktpAddress         String?
+  ktpPhotoUrl        String?
+  ktpVerified        Boolean            @default(false)
+  simNumber          String?
+  simType            String?
+  simExpiryDate      DateTime?
+  simPhotoUrl        String?
+  simVerified        Boolean            @default(false)
+  selfiePhotoUrl     String?
+  verificationStatus VerificationStatus @default(PENDING)
+  verifiedBy         String?
+  verifiedAt         DateTime?
+  rejectionReason    String?
+  riskScore          Int                @default(0)
+  notes              String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@map("customer_verifications")
+}
+
+model CustomerBlacklist {
+  id          String          @id @default(cuid())
+  ktpNumber   String?
+  simNumber   String?
+  name        String
+  phone       String?
+  reason      BlacklistReason
+  description String
+  reportedBy  String
+  reporter    User            @relation("BlacklistReporter", fields: [reportedBy], references: [id])
+  isActive    Boolean         @default(true)
+  expiresAt   DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@map("customer_blacklists")
 }
