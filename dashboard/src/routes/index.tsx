@@ -42,6 +42,8 @@ const RevenueReportPage = lazy(() => import('@/pages/reports/RevenueReportPage')
 const FleetReportPage = lazy(() => import('@/pages/reports/FleetReportPage'));
 const ExpenseReportPage = lazy(() => import('@/pages/reports/ExpenseReportPage'));
 const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'));
+const VerificationListPage = lazy(() => import('@/pages/verification/VerificationListPage'));
+const BlacklistPage = lazy(() => import('@/pages/verification/BlacklistPage'));
 
 const Loading = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
@@ -113,6 +115,8 @@ const AppRoutes: React.FC = () => {
           <Route path="reports/revenue" element={<RevenueReportPage />} />
           <Route path="reports/fleet" element={<FleetReportPage />} />
           <Route path="reports/expenses" element={<ExpenseReportPage />} />
+          <Route path="verification" element={<VerificationListPage />} />
+          <Route path="blacklist" element={<BlacklistPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

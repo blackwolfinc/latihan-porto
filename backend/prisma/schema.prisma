@@ -27,6 +27,7 @@ model Organization {
   branches    Branch[]
   users       User[]
   invoices    Invoice[]
+  invoiceTemplate InvoiceTemplate?
 
   @@map("organizations")
 }
@@ -470,6 +471,61 @@ model InvoiceItem {
   amount      Decimal @db.Decimal(12, 2)
 
   @@map("invoice_items")
+}
+
+model InvoiceTemplate {
+  id               String   @id @default(cuid())
+  organizationId   String   @unique
+  organization     Organization @relation(fields: [organizationId], references: [id])
+
+  // Company Branding
+  logoUrl          String?
+  companyName      String
+  companyTagline   String?  // e.g. "Solusi Rental Mobil Terpercaya"
+
+  // Kop Surat / Letterhead
+  headerAddress    String?
+  headerCity       String?
+  headerPhone      String?
+  headerEmail      String?
+  headerWebsite    String?
+  headerNpwp       String?  // NPWP perusahaan
+
+  // Invoice Styling
+  primaryColor     String   @default("#1a56db")  // Hex color for header/accents
+  secondaryColor   String   @default("#6b7280")
+
+  // Signature
+  signatureName    String?   // Nama penandatangan
+  signatureTitle   String?   // Jabatan (e.g. "Direktur Utama", "Finance Manager")
+  signatureImageUrl String?  // Gambar tanda tangan digital
+  stampImageUrl    String?   // Gambar stempel perusahaan
+
+  // Bank Account for Payment
+  bankName         String?   // e.g. "Bank BCA"
+  bankAccountNumber String?  // e.g. "123-456-7890"
+  bankAccountName  String?   // e.g. "PT Caritahub Rental Indonesia"
+  bankBranch       String?   // e.g. "KCP Jakarta Pusat"
+
+  // Additional bank accounts (JSON array)
+  additionalBanks  Json?     // [{ bankName, accountNumber, accountName }]
+
+  // Terms & Conditions
+  termsAndConditions String?  // Rich text for T&C on invoice
+  paymentTerms     String?   // e.g. "Pembayaran dilakukan dalam 7 hari kerja"
+
+  // Footer
+  footerText       String?   // e.g. "Terima kasih atas kepercayaan Anda"
+  footerNote       String?   // Additional note
+
+  // Invoice Number Format
+  invoicePrefix    String   @default("INV")  // e.g. "INV", "FAK", custom
+  invoiceNumberFormat String @default("{PREFIX}-{YYYYMMDD}-{SEQ}")
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("invoice_templates")
 }
 
 enum VerificationStatus {

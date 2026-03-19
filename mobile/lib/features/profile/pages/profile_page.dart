@@ -90,6 +90,13 @@ class ProfilePage extends StatelessWidget {
                   ),
                   _buildMenuItem(
                     context,
+                    icon: Icons.verified_user_outlined,
+                    title: 'Verifikasi Identitas',
+                    subtitle: 'KTP & SIM',
+                    onTap: () => context.push('/verification'),
+                  ),
+                  _buildMenuItem(
+                    context,
                     icon: Icons.description_outlined,
                     title: 'Dokumen Saya',
                     onTap: () {},

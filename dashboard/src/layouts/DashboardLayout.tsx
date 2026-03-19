@@ -22,6 +22,8 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   GlobalOutlined,
+  SafetyCertificateOutlined,
+  StopOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth.store';
@@ -31,25 +33,27 @@ import { useLanguageStore } from '@/stores/language.store';
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
 
-const menuItems = [
-  { key: '/operational', icon: <DashboardOutlined />, label: 'Operasional' },
-  { key: '/dashboard', icon: <BarChartOutlined />, label: 'Laporan & Analisa' },
-  { key: '/cars', icon: <CarOutlined />, label: 'Mobil' },
-  { key: '/bookings', icon: <CalendarOutlined />, label: 'Booking' },
-  { key: '/scheduling', icon: <ScheduleOutlined />, label: 'Scheduling' },
-  { key: '/drivers', icon: <TeamOutlined />, label: 'Driver' },
-  { key: '/customers', icon: <UserOutlined />, label: 'Customer' },
-  { key: '/invoices', icon: <FileTextOutlined />, label: 'Invoice' },
-  { key: '/payments', icon: <CreditCardOutlined />, label: 'Pembayaran' },
-  { key: '/maintenance', icon: <ToolOutlined />, label: 'Maintenance' },
-  { key: '/fuel', icon: <DollarOutlined />, label: 'BBM & Biaya' },
-  { key: '/gps', icon: <EnvironmentOutlined />, label: 'GPS Tracking' },
-  { key: '/inspections', icon: <FileSearchOutlined />, label: 'Inspeksi' },
-  { key: '/contracts', icon: <FileTextOutlined />, label: 'Kontrak' },
-  { key: '/reviews', icon: <StarOutlined />, label: 'Review' },
-  { key: '/branches', icon: <BankOutlined />, label: 'Cabang' },
-  { key: '/reports', icon: <BarChartOutlined />, label: 'Laporan' },
-  { key: '/settings', icon: <SettingOutlined />, label: 'Pengaturan' },
+const getMenuItems = () => [
+  { key: '/operational', icon: <DashboardOutlined />, label: t('nav.operational') },
+  { key: '/dashboard', icon: <BarChartOutlined />, label: t('nav.dashboard') },
+  { key: '/cars', icon: <CarOutlined />, label: t('nav.cars') },
+  { key: '/bookings', icon: <CalendarOutlined />, label: t('nav.bookings') },
+  { key: '/scheduling', icon: <ScheduleOutlined />, label: t('nav.scheduling') },
+  { key: '/drivers', icon: <TeamOutlined />, label: t('nav.drivers') },
+  { key: '/customers', icon: <UserOutlined />, label: t('nav.customers') },
+  { key: '/verification', icon: <SafetyCertificateOutlined />, label: 'Verifikasi' },
+  { key: '/blacklist', icon: <StopOutlined />, label: 'Blacklist' },
+  { key: '/invoices', icon: <FileTextOutlined />, label: t('nav.invoices') },
+  { key: '/payments', icon: <CreditCardOutlined />, label: t('nav.payments') },
+  { key: '/maintenance', icon: <ToolOutlined />, label: t('nav.maintenance') },
+  { key: '/fuel', icon: <DollarOutlined />, label: t('nav.fuel') },
+  { key: '/gps', icon: <EnvironmentOutlined />, label: t('nav.gps') },
+  { key: '/inspections', icon: <FileSearchOutlined />, label: t('nav.inspections') },
+  { key: '/contracts', icon: <FileTextOutlined />, label: t('nav.contracts') },
+  { key: '/reviews', icon: <StarOutlined />, label: t('nav.reviews') },
+  { key: '/branches', icon: <BankOutlined />, label: t('nav.branches') },
+  { key: '/reports', icon: <BarChartOutlined />, label: t('nav.reports') },
+  { key: '/settings', icon: <SettingOutlined />, label: t('nav.settings') },
 ];
 
 const DashboardLayout: React.FC = () => {
@@ -57,9 +61,11 @@ const DashboardLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
+  const { language, setLanguage } = useLanguageStore();
   const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
 
   const selectedKey = '/' + (location.pathname.split('/')[1] || '');
+  const menuItems = getMenuItems();
 
   const handleMenuClick = ({ key }: { key: string }) => {
     navigate(key);
@@ -69,7 +75,7 @@ const DashboardLayout: React.FC = () => {
     {
       key: 'profile',
       icon: <UserOutlined />,
-      label: 'Profile',
+      label: t('common.detail'),
       onClick: () => navigate('/settings'),
     },
     {
@@ -78,7 +84,7 @@ const DashboardLayout: React.FC = () => {
     {
       key: 'logout',
       icon: <LogoutOutlined />,
-      label: 'Logout',
+      label: t('auth.logout'),
       danger: true,
       onClick: () => {
         logout();
@@ -144,6 +150,16 @@ const DashboardLayout: React.FC = () => {
             {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
           </span>
           <Space size={16}>
+            <Select
+              value={language}
+              onChange={(value) => setLanguage(value as Language)}
+              style={{ width: 160 }}
+              suffixIcon={<GlobalOutlined />}
+              options={LANGUAGES.map((lang) => ({
+                value: lang.code,
+                label: `${lang.flag} ${lang.label}`,
+              }))}
+            />
             <Badge count={5} size="small">
               <BellOutlined style={{ fontSize: 18, cursor: 'pointer' }} />
             </Badge>

@@ -80,4 +80,10 @@ class ApiEndpoints {
 
   // Car Documents
   static String carDocuments(String carId) => '/cars/$carId/documents';
+
+  // Verification
+  static const String verificationSubmit = '/verification/submit';
+  static const String verificationStatus = '/verification/status';
+  static String verificationPreBookingCheck(String customerId) => '/verification/pre-booking-check/$customerId';
+  static const String blacklistCheck = '/verification/blacklist/check';
 }

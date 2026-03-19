@@ -23,6 +23,7 @@ import '../features/invoices/pages/invoice_detail_page.dart';
 import '../features/notifications/pages/notification_list_page.dart';
 import '../features/profile/pages/profile_page.dart';
 import '../features/profile/pages/edit_profile_page.dart';
+import '../features/verification/pages/verification_page.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/login',
@@ -173,6 +174,11 @@ final GoRouter appRouter = GoRouter(
       path: '/notifications',
       name: 'notifications',
       builder: (context, state) => const NotificationListPage(),
+    ),
+    GoRoute(
+      path: '/verification',
+      name: 'verification',
+      builder: (context, state) => const VerificationPage(),
     ),
   ],
   errorBuilder: (context, state) => Scaffold(
