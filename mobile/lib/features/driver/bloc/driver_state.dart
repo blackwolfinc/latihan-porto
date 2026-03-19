@@ -14,22 +14,24 @@ class DriverInitial extends DriverState {}
 class DriverLoading extends DriverState {}
 
 class DriverDashboardLoaded extends DriverState {
-  final List<Booking> todayTrips;
   final bool isAvailable;
+  final int tripsToday;
   final int totalTrips;
   final double rating;
-  final double todayEarnings;
+  final Booking? activeTrip;
+  final List<Booking> upcomingTrips;
 
   const DriverDashboardLoaded({
-    required this.todayTrips,
     required this.isAvailable,
+    required this.tripsToday,
     required this.totalTrips,
     required this.rating,
-    required this.todayEarnings,
+    this.activeTrip,
+    this.upcomingTrips = const [],
   });
 
   @override
-  List<Object?> get props => [todayTrips, isAvailable, totalTrips, rating, todayEarnings];
+  List<Object?> get props => [isAvailable, tripsToday, totalTrips, rating, activeTrip, upcomingTrips];
 }
 
 class DriverTripsLoaded extends DriverState {
@@ -41,16 +43,31 @@ class DriverTripsLoaded extends DriverState {
   List<Object?> get props => [trips];
 }
 
-class TripDetailLoaded extends DriverState {
+class DriverTripDetailLoaded extends DriverState {
   final Booking trip;
 
-  const TripDetailLoaded({required this.trip});
+  const DriverTripDetailLoaded({required this.trip});
 
   @override
   List<Object?> get props => [trip];
 }
 
-class TripCompleted extends DriverState {}
+class DriverEarningsLoaded extends DriverState {
+  final double totalEarnings;
+  final List<Map<String, dynamic>> earningsHistory;
+  final List<double> chartData;
+
+  const DriverEarningsLoaded({
+    required this.totalEarnings,
+    this.earningsHistory = const [],
+    this.chartData = const [],
+  });
+
+  @override
+  List<Object?> get props => [totalEarnings, earningsHistory, chartData];
+}
+
+class FuelLogSubmitted extends DriverState {}
 
 class FuelLogsLoaded extends DriverState {
   final List<FuelLog> fuelLogs;
@@ -61,21 +78,31 @@ class FuelLogsLoaded extends DriverState {
   List<Object?> get props => [fuelLogs];
 }
 
-class FuelLogSubmitted extends DriverState {}
+class DriverAvailabilityUpdated extends DriverState {
+  final bool isAvailable;
 
-class EarningsLoaded extends DriverState {
-  final double totalEarnings;
-  final double thisMonthEarnings;
-  final List<Map<String, dynamic>> earningsHistory;
-
-  const EarningsLoaded({
-    required this.totalEarnings,
-    required this.thisMonthEarnings,
-    required this.earningsHistory,
-  });
+  const DriverAvailabilityUpdated({required this.isAvailable});
 
   @override
-  List<Object?> get props => [totalEarnings, thisMonthEarnings, earningsHistory];
+  List<Object?> get props => [isAvailable];
+}
+
+class TripStarted extends DriverState {
+  final String tripId;
+
+  const TripStarted({required this.tripId});
+
+  @override
+  List<Object?> get props => [tripId];
+}
+
+class TripEnded extends DriverState {
+  final String tripId;
+
+  const TripEnded({required this.tripId});
+
+  @override
+  List<Object?> get props => [tripId];
 }
 
 class DriverError extends DriverState {

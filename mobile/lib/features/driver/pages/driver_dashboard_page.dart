@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../shared/widgets/custom_app_bar.dart';
-import '../../../shared/widgets/empty_state.dart';
 import '../bloc/driver_bloc.dart';
 import '../bloc/driver_event.dart';
 import '../bloc/driver_state.dart';
@@ -16,207 +15,13 @@ class DriverDashboardPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => DriverBloc(apiClient: ApiClient())..add(LoadDriverDashboard()),
-      child: Scaffold(
-        appBar: CustomAppBar(
-          title: 'Dashboard Sopir',
-          showBack: false,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.notifications_outlined),
-              onPressed: () => context.push('/notifications'),
-            ),
-            IconButton(
-              icon: const Icon(Icons.person_outlined),
-              onPressed: () => context.push('/profile'),
-            ),
-          ],
-        ),
-        body: BlocBuilder<DriverBloc, DriverState>(
-          builder: (context, state) {
-            if (state is DriverLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (state is DriverDashboardLoaded) {
-              return RefreshIndicator(
-                onRefresh: () async {
-                  context.read<DriverBloc>().add(LoadDriverDashboard());
-                },
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(AppSizes.paddingMD),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Availability Toggle
-                      Container(
-                        padding: const EdgeInsets.all(AppSizes.paddingMD),
-                        decoration: BoxDecoration(
-                          color: state.isAvailable ? AppColors.success.withOpacity(0.1) : AppColors.error.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(AppSizes.radiusMD),
-                          border: Border.all(
-                            color: state.isAvailable ? AppColors.success.withOpacity(0.3) : AppColors.error.withOpacity(0.3),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  state.isAvailable ? 'Anda Tersedia' : 'Anda Tidak Tersedia',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: state.isAvailable ? AppColors.success : AppColors.error,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  state.isAvailable ? 'Siap menerima trip baru' : 'Tidak menerima trip baru',
-                                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
-                                ),
-                              ],
-                            ),
-                            Switch(
-                              value: state.isAvailable,
-                              onChanged: (value) {
-                                context.read<DriverBloc>().add(ToggleDriverAvailability(isAvailable: value));
-                              },
-                              activeColor: AppColors.success,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Stats Grid
-                      Row(
-                        children: [
-                          Expanded(child: _buildStatCard(context, Icons.drive_eta, '${state.totalTrips}', 'Total Trip')),
-                          const SizedBox(width: 12),
-                          Expanded(child: _buildStatCard(context, Icons.star, state.rating.toStringAsFixed(1), 'Rating')),
-                          const SizedBox(width: 12),
-                          Expanded(child: _buildStatCard(context, Icons.account_balance_wallet, _formatCurrency(state.todayEarnings), 'Hari Ini')),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Quick Actions
-                      Text('Menu Cepat', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildQuickAction(context, Icons.local_gas_station, 'Isi BBM', () => context.push('/driver/fuel-log')),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildQuickAction(context, Icons.attach_money, 'Penghasilan', () => context.push('/driver/earnings')),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Today's Trips
-                      Text('Trip Hari Ini', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 12),
-                      if (state.todayTrips.isEmpty)
-                        Container(
-                          padding: const EdgeInsets.all(32),
-                          decoration: BoxDecoration(
-                            color: AppColors.background,
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMD),
-                          ),
-                          child: const Center(
-                            child: Column(
-                              children: [
-                                Icon(Icons.drive_eta_outlined, size: 48, color: Colors.grey),
-                                SizedBox(height: 8),
-                                Text('Belum ada trip hari ini', style: TextStyle(color: AppColors.textSecondary)),
-                              ],
-                            ),
-                          ),
-                        )
-                      else
-                        ...state.todayTrips.map((trip) => Card(
-                              child: ListTile(
-                                leading: CircleAvatar(
-                                  backgroundColor: AppColors.primary,
-                                  child: Text(
-                                    (trip.user?.name ?? 'C')[0],
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                ),
-                                title: Text(trip.user?.name ?? 'Pelanggan', style: const TextStyle(fontWeight: FontWeight.w600)),
-                                subtitle: Text(trip.pickupLocation, maxLines: 1, overflow: TextOverflow.ellipsis),
-                                trailing: const Icon(Icons.chevron_right),
-                                onTap: () => context.push('/driver/trip/${trip.id}'),
-                              ),
-                            )),
-                    ],
-                  ),
-                ),
-              );
-            }
-            if (state is DriverError) {
-              return EmptyState(
-                icon: Icons.error_outline,
-                title: 'Terjadi Kesalahan',
-                subtitle: state.message,
-                buttonText: 'Coba Lagi',
-                onButtonPressed: () => context.read<DriverBloc>().add(LoadDriverDashboard()),
-              );
-            }
-            return const SizedBox.shrink();
-          },
-        ),
-      ),
+      child: const _DriverDashboardView(),
     );
   }
+}
 
-  Widget _buildStatCard(BuildContext context, IconData icon, String value, String label) {
-    return Container(
-      padding: const EdgeInsets.all(AppSizes.paddingMD),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMD),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 2))],
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: AppColors.primary, size: 28),
-          const SizedBox(height: 8),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 2),
-          Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickAction(BuildContext context, IconData icon, String label, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppSizes.radiusMD),
-      child: Container(
-        padding: const EdgeInsets.all(AppSizes.paddingMD),
-        decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(AppSizes.radiusMD),
-          border: Border.all(color: AppColors.primary.withOpacity(0.2)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: AppColors.primary, size: 24),
-            const SizedBox(width: 8),
-            Text(label, style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
-          ],
-        ),
-      ),
-    );
-  }
+class _DriverDashboardView extends StatelessWidget {
+  const _DriverDashboardView();
 
   String _formatCurrency(double amount) {
     final parts = amount.toStringAsFixed(0).split('');
@@ -226,5 +31,285 @@ class DriverDashboardPage extends StatelessWidget {
       buffer.write(parts[i]);
     }
     return 'Rp $buffer';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Dashboard Driver'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () => context.push('/notifications'),
+          ),
+        ],
+      ),
+      body: BlocBuilder<DriverBloc, DriverState>(
+        builder: (context, state) {
+          if (state is DriverLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (state is DriverDashboardLoaded) {
+            return RefreshIndicator(
+              onRefresh: () async {
+                context.read<DriverBloc>().add(LoadDriverDashboard());
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(AppSizes.paddingMD),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Availability toggle
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSizes.paddingMD),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Status Ketersediaan',
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                                Text(
+                                  state.isAvailable ? 'Tersedia' : 'Tidak Tersedia',
+                                  style: TextStyle(
+                                    color: state.isAvailable ? AppColors.success : AppColors.error,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Switch(
+                              value: state.isAvailable,
+                              onChanged: (value) {
+                                context.read<DriverBloc>().add(ToggleAvailability(isAvailable: value));
+                              },
+                              activeColor: AppColors.success,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Stats row
+                    Row(
+                      children: [
+                        _buildStatCard(context, 'Trip Hari Ini', '${state.tripsToday}', Icons.today, AppColors.primary),
+                        const SizedBox(width: 8),
+                        _buildStatCard(context, 'Total Trip', '${state.totalTrips}', Icons.directions_car, AppColors.secondary),
+                        const SizedBox(width: 8),
+                        _buildStatCard(context, 'Rating', state.rating.toStringAsFixed(1), Icons.star, Colors.amber),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Active trip
+                    if (state.activeTrip != null) ...[
+                      Text(
+                        'Trip Aktif',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      Card(
+                        color: AppColors.primary.withOpacity(0.05),
+                        child: InkWell(
+                          onTap: () => context.push('/driver/trip/${state.activeTrip!.id}'),
+                          borderRadius: BorderRadius.circular(AppSizes.radiusLG),
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSizes.paddingMD),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.person, color: AppColors.primary),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      state.activeTrip!.user?.name ?? 'Pelanggan',
+                                      style: const TextStyle(fontWeight: FontWeight.w600),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.directions_car, size: 16, color: AppColors.textSecondary),
+                                    const SizedBox(width: 8),
+                                    Text(state.activeTrip!.car?.name ?? 'Mobil'),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.location_on, size: 16, color: AppColors.textSecondary),
+                                    const SizedBox(width: 8),
+                                    Expanded(child: Text(state.activeTrip!.pickupLocation, maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton.icon(
+                                    onPressed: () => context.push('/driver/trip/${state.activeTrip!.id}'),
+                                    icon: const Icon(Icons.navigation),
+                                    label: const Text('Lihat Detail'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+
+                    // Upcoming trips
+                    if (state.upcomingTrips.isNotEmpty) ...[
+                      Text(
+                        'Trip Mendatang',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      ...state.upcomingTrips.map((trip) => Card(
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: AppColors.primaryLight,
+                                child: const Icon(Icons.person, color: Colors.white, size: 20),
+                              ),
+                              title: Text(trip.user?.name ?? 'Pelanggan'),
+                              subtitle: Text(
+                                '${DateFormat('dd MMM').format(trip.startDate)} - ${trip.pickupLocation}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () => context.push('/driver/trip/${trip.id}'),
+                            ),
+                          )),
+                      const SizedBox(height: 20),
+                    ],
+
+                    // Quick actions
+                    Text(
+                      'Aksi Cepat',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildQuickAction(
+                            context,
+                            Icons.local_gas_station,
+                            'Log BBM',
+                            AppColors.secondary,
+                            () => context.push('/driver/fuel-log'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildQuickAction(
+                            context,
+                            Icons.account_balance_wallet,
+                            'Pendapatan',
+                            AppColors.success,
+                            () => context.push('/driver/earnings'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+          if (state is DriverError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: Colors.grey),
+                  const SizedBox(height: 8),
+                  Text(state.message),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => context.read<DriverBloc>().add(LoadDriverDashboard()),
+                    child: const Text('Coba Lagi'),
+                  ),
+                ],
+              ),
+            );
+          }
+          return const SizedBox.shrink();
+        },
+      ),
+    );
+  }
+
+  Widget _buildStatCard(BuildContext context, String label, String value, IconData icon, Color color) {
+    return Expanded(
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            children: [
+              Icon(icon, color: color, size: 28),
+              const SizedBox(height: 8),
+              Text(
+                value,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickAction(BuildContext context, IconData icon, String label, Color color, VoidCallback onTap) {
+    return Card(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppSizes.radiusLG),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSizes.paddingMD),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color),
+              ),
+              const SizedBox(height: 8),
+              Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

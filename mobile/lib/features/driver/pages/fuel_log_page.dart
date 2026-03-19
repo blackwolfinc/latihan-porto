@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import '../../../core/api/api_client.dart';
+import '../../../core/api/api_endpoints.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../shared/widgets/custom_app_bar.dart';
+import '../../../shared/models/fuel_log.dart';
 import '../bloc/driver_bloc.dart';
 import '../bloc/driver_event.dart';
 import '../bloc/driver_state.dart';
@@ -17,55 +19,54 @@ class FuelLogPage extends StatefulWidget {
 
 class _FuelLogPageState extends State<FuelLogPage> {
   final _formKey = GlobalKey<FormState>();
-  final _litersController = TextEditingController();
-  final _costPerLiterController = TextEditingController();
+  final _literController = TextEditingController();
+  final _costController = TextEditingController();
   final _odometerController = TextEditingController();
-  final _stationController = TextEditingController();
   final _notesController = TextEditingController();
-  String _fuelType = 'Pertamax';
+  String _selectedFuelType = 'Pertalite';
   String? _receiptPhotoPath;
-  final _imagePicker = ImagePicker();
+  List<FuelLog> _recentLogs = [];
+  bool _isLoadingLogs = false;
+
+  final _fuelTypes = ['Pertalite', 'Pertamax', 'Pertamax Turbo', 'Solar', 'Dexlite', 'Pertamina Dex'];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRecentLogs();
+  }
+
+  Future<void> _loadRecentLogs() async {
+    setState(() => _isLoadingLogs = true);
+    try {
+      final apiClient = ApiClient();
+      final response = await apiClient.get(ApiEndpoints.fuelLogs, queryParameters: {'limit': 10});
+      final logs = (response.data['data'] as List)
+          .map((json) => FuelLog.fromJson(json as Map<String, dynamic>))
+          .toList();
+      setState(() {
+        _recentLogs = logs;
+        _isLoadingLogs = false;
+      });
+    } catch (_) {
+      setState(() => _isLoadingLogs = false);
+    }
+  }
 
   @override
   void dispose() {
-    _litersController.dispose();
-    _costPerLiterController.dispose();
+    _literController.dispose();
+    _costController.dispose();
     _odometerController.dispose();
-    _stationController.dispose();
     _notesController.dispose();
     super.dispose();
   }
 
-  double get _totalCost {
-    final liters = double.tryParse(_litersController.text) ?? 0;
-    final costPerLiter = double.tryParse(_costPerLiterController.text) ?? 0;
-    return liters * costPerLiter;
-  }
-
-  Future<void> _pickPhoto() async {
-    final image = await _imagePicker.pickImage(
-      source: ImageSource.camera,
-      maxWidth: AppConstants.maxImageWidth,
-      maxHeight: AppConstants.maxImageHeight,
-      imageQuality: AppConstants.imageQuality,
-    );
+  Future<void> _pickReceiptPhoto() async {
+    final picker = ImagePicker();
+    final image = await picker.pickImage(source: ImageSource.camera, imageQuality: 80);
     if (image != null) {
       setState(() => _receiptPhotoPath = image.path);
-    }
-  }
-
-  void _submit() {
-    if (_formKey.currentState!.validate()) {
-      context.read<DriverBloc>().add(SubmitFuelLog(
-            carId: '',
-            liters: double.parse(_litersController.text),
-            costPerLiter: double.parse(_costPerLiterController.text),
-            odometer: double.parse(_odometerController.text),
-            fuelType: _fuelType,
-            stationName: _stationController.text.isNotEmpty ? _stationController.text : null,
-            receiptPhotoPath: _receiptPhotoPath,
-            notes: _notesController.text.isNotEmpty ? _notesController.text : null,
-          ));
     }
   }
 
@@ -73,161 +74,182 @@ class _FuelLogPageState extends State<FuelLogPage> {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => DriverBloc(apiClient: ApiClient()),
-      child: Scaffold(
-        appBar: const CustomAppBar(title: 'Catatan BBM'),
-        body: BlocListener<DriverBloc, DriverState>(
-          listener: (context, state) {
-            if (state is FuelLogSubmitted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Catatan BBM berhasil disimpan!'), backgroundColor: AppColors.success),
-              );
-              Navigator.pop(context);
-            } else if (state is DriverError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message), backgroundColor: AppColors.error),
-              );
-            }
-          },
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSizes.paddingMD),
-            child: Form(
-              key: _formKey,
+      child: BlocConsumer<DriverBloc, DriverState>(
+        listener: (context, state) {
+          if (state is FuelLogSubmitted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Log BBM berhasil disimpan'), backgroundColor: AppColors.success),
+            );
+            _formKey.currentState?.reset();
+            _literController.clear();
+            _costController.clear();
+            _odometerController.clear();
+            _notesController.clear();
+            setState(() => _receiptPhotoPath = null);
+            _loadRecentLogs();
+          } else if (state is DriverError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message), backgroundColor: AppColors.error),
+            );
+          }
+        },
+        builder: (context, state) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Log BBM')),
+            body: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSizes.paddingMD),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Isi data pengisian BBM', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 20),
-                  DropdownButtonFormField<String>(
-                    value: _fuelType,
-                    decoration: const InputDecoration(
-                      labelText: 'Jenis BBM',
-                      prefixIcon: Icon(Icons.local_gas_station),
-                    ),
-                    items: ['Pertalite', 'Pertamax', 'Pertamax Turbo', 'Dexlite', 'Pertamina Dex', 'Solar']
-                        .map((type) => DropdownMenuItem(value: type, child: Text(type)))
-                        .toList(),
-                    onChanged: (value) => setState(() => _fuelType = value ?? 'Pertamax'),
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _litersController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Jumlah (Liter)',
-                      hintText: 'Contoh: 35.5',
-                      prefixIcon: Icon(Icons.water_drop),
-                    ),
-                    onChanged: (_) => setState(() {}),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return 'Jumlah tidak boleh kosong';
-                      if (double.tryParse(value) == null) return 'Format angka tidak valid';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _costPerLiterController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Harga per Liter (Rp)',
-                      hintText: 'Contoh: 13900',
-                      prefixIcon: Icon(Icons.attach_money),
-                    ),
-                    onChanged: (_) => setState(() {}),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return 'Harga tidak boleh kosong';
-                      if (double.tryParse(value) == null) return 'Format angka tidak valid';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  if (_totalCost > 0)
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(AppSizes.radiusSM),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Total Biaya:', style: TextStyle(fontWeight: FontWeight.w500)),
-                          Text(
-                            'Rp ${_formatCurrency(_totalCost)}',
-                            style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary, fontSize: 16),
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Catat Pengisian BBM',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _literController,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          decoration: const InputDecoration(
+                            labelText: 'Jumlah Liter',
+                            hintText: 'Contoh: 40.5',
+                            prefixIcon: Icon(Icons.local_gas_station),
+                            suffixText: 'L',
                           ),
-                        ],
-                      ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) return 'Jumlah liter wajib diisi';
+                            if (double.tryParse(value) == null) return 'Masukkan angka yang valid';
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _costController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Total Biaya',
+                            hintText: 'Contoh: 500000',
+                            prefixIcon: Icon(Icons.payments),
+                            prefixText: 'Rp ',
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) return 'Total biaya wajib diisi';
+                            if (double.tryParse(value) == null) return 'Masukkan angka yang valid';
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _odometerController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Odometer',
+                            hintText: 'Contoh: 45230',
+                            prefixIcon: Icon(Icons.speed),
+                            suffixText: 'km',
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) return 'Odometer wajib diisi';
+                            if (double.tryParse(value) == null) return 'Masukkan angka yang valid';
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<String>(
+                          value: _selectedFuelType,
+                          decoration: const InputDecoration(
+                            labelText: 'Jenis BBM',
+                            prefixIcon: Icon(Icons.oil_barrel),
+                          ),
+                          items: _fuelTypes.map((type) => DropdownMenuItem(value: type, child: Text(type))).toList(),
+                          onChanged: (value) => setState(() => _selectedFuelType = value ?? 'Pertalite'),
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _notesController,
+                          maxLines: 2,
+                          decoration: const InputDecoration(
+                            labelText: 'Catatan (opsional)',
+                            hintText: 'Catatan tambahan',
+                            prefixIcon: Icon(Icons.notes),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        OutlinedButton.icon(
+                          onPressed: _pickReceiptPhoto,
+                          icon: const Icon(Icons.camera_alt),
+                          label: Text(_receiptPhotoPath != null ? 'Foto diambil' : 'Foto Struk'),
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: state is DriverLoading
+                                ? null
+                                : () {
+                                    if (_formKey.currentState!.validate()) {
+                                      context.read<DriverBloc>().add(SubmitFuelLog(
+                                            carId: '',
+                                            liters: double.parse(_literController.text),
+                                            totalCost: double.parse(_costController.text),
+                                            odometer: double.parse(_odometerController.text),
+                                            fuelType: _selectedFuelType,
+                                            receiptPhotoPath: _receiptPhotoPath,
+                                            notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+                                          ));
+                                    }
+                                  },
+                            child: state is DriverLoading
+                                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                : const Text('Simpan'),
+                          ),
+                        ),
+                      ],
                     ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _odometerController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Odometer (km)',
-                      hintText: 'Contoh: 45230',
-                      prefixIcon: Icon(Icons.speed),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return 'Odometer tidak boleh kosong';
-                      if (double.tryParse(value) == null) return 'Format angka tidak valid';
-                      return null;
-                    },
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _stationController,
-                    decoration: const InputDecoration(
-                      labelText: 'Nama SPBU (Opsional)',
-                      hintText: 'Contoh: SPBU Pertamina 31.125.01',
-                      prefixIcon: Icon(Icons.location_on),
-                    ),
+                  const SizedBox(height: 32),
+                  Text(
+                    'Riwayat Pengisian',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _notesController,
-                    maxLines: 2,
-                    decoration: const InputDecoration(
-                      labelText: 'Catatan (Opsional)',
-                      hintText: 'Tambah catatan...',
-                      prefixIcon: Icon(Icons.notes),
-                      alignLabelWithHint: true,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  OutlinedButton.icon(
-                    onPressed: _pickPhoto,
-                    icon: const Icon(Icons.camera_alt),
-                    label: Text(_receiptPhotoPath != null ? 'Foto struk terpilih' : 'Foto Struk (Opsional)'),
-                    style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 52)),
-                  ),
-                  const SizedBox(height: 24),
-                  BlocBuilder<DriverBloc, DriverState>(
-                    builder: (context, state) {
-                      return ElevatedButton(
-                        onPressed: state is DriverLoading ? null : _submit,
-                        child: state is DriverLoading
-                            ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                            : const Text('Simpan'),
-                      );
-                    },
-                  ),
+                  const SizedBox(height: 8),
+                  if (_isLoadingLogs)
+                    const Center(child: CircularProgressIndicator())
+                  else if (_recentLogs.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.all(24),
+                      child: Center(child: Text('Belum ada riwayat pengisian', style: TextStyle(color: AppColors.textSecondary))),
+                    )
+                  else
+                    ...(_recentLogs.map((log) => Card(
+                          child: ListTile(
+                            leading: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: AppColors.secondary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(Icons.local_gas_station, color: AppColors.secondary, size: 20),
+                            ),
+                            title: Text('${log.liters.toStringAsFixed(1)} L - ${log.fuelType}'),
+                            subtitle: Text(DateFormat('dd MMM yyyy, HH:mm').format(log.filledAt)),
+                            trailing: Text(
+                              log.formattedTotalCost,
+                              style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.primary),
+                            ),
+                          ),
+                        ))),
                 ],
               ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
-  }
-
-  String _formatCurrency(double amount) {
-    final parts = amount.toStringAsFixed(0).split('');
-    final buffer = StringBuffer();
-    for (int i = 0; i < parts.length; i++) {
-      if (i > 0 && (parts.length - i) % 3 == 0) buffer.write('.');
-      buffer.write(parts[i]);
-    }
-    return buffer.toString();
   }
 }

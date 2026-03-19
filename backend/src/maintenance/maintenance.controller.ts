@@ -30,14 +30,14 @@ export class MaintenanceController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.maintenanceService.findAll({ carId, type, page: +page || 1, limit: +limit || 10 });
+    return this.maintenanceService.findAll({ carId, type, page: Number(page) || 1, limit: Number(limit) || 10 });
   }
 
   @Get('upcoming')
   @ApiOperation({ summary: 'Get upcoming maintenance reminders' })
   @ApiQuery({ name: 'days', required: false })
   getUpcoming(@Query('days') days?: number) {
-    return this.maintenanceService.getUpcoming(+days || 30);
+    return this.maintenanceService.getUpcoming(Number(days) || 30);
   }
 
   @Get(':id')

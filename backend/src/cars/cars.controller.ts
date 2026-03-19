@@ -35,7 +35,7 @@ export class CarsController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.carsService.findAll({ branchId, category, status, search, page: +page || 1, limit: +limit || 10 });
+    return this.carsService.findAll({ branchId, category, status, search, page: Number(page) || 1, limit: Number(limit) || 10 });
   }
 
   @Public()

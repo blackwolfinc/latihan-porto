@@ -21,10 +21,10 @@ class PaymentStatusPage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildStatusIcon(),
+              _buildIcon(),
               const SizedBox(height: 24),
               Text(
-                _getTitle(),
+                _title,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -32,29 +32,14 @@ class PaymentStatusPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                _getSubtitle(),
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                _subtitle,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppColors.textSecondary,
                     ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 48),
-              ElevatedButton(
-                onPressed: () => context.go('/bookings/$bookingId'),
-                child: const Text('Lihat Detail Pemesanan'),
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton(
-                onPressed: () => context.go('/home'),
-                child: const Text('Kembali ke Beranda'),
-              ),
-              if (status == 'failed') ...[
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: () => context.go('/payment/$bookingId'),
-                  child: const Text('Coba Bayar Lagi'),
-                ),
-              ],
+              const SizedBox(height: 40),
+              ..._buildActions(context),
             ],
           ),
         ),
@@ -62,7 +47,7 @@ class PaymentStatusPage extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusIcon() {
+  Widget _buildIcon() {
     switch (status) {
       case 'success':
         return Container(
@@ -82,7 +67,7 @@ class PaymentStatusPage extends StatelessWidget {
             shape: BoxShape.circle,
             color: AppColors.warning,
           ),
-          child: const Icon(Icons.access_time, color: Colors.white, size: 56),
+          child: const Icon(Icons.schedule, color: Colors.white, size: 56),
         );
       default:
         return Container(
@@ -97,7 +82,7 @@ class PaymentStatusPage extends StatelessWidget {
     }
   }
 
-  String _getTitle() {
+  String get _title {
     switch (status) {
       case 'success':
         return 'Pembayaran Berhasil!';
@@ -108,14 +93,55 @@ class PaymentStatusPage extends StatelessWidget {
     }
   }
 
-  String _getSubtitle() {
+  String get _subtitle {
     switch (status) {
       case 'success':
-        return 'Pembayaran Anda telah berhasil diproses. Pemesanan Anda sudah dikonfirmasi.';
+        return 'Pembayaran Anda telah berhasil diproses. Pemesanan Anda telah dikonfirmasi.';
       case 'pending':
-        return 'Silakan selesaikan pembayaran Anda sesuai instruksi yang diberikan.';
+        return 'Silakan selesaikan pembayaran Anda sesuai instruksi yang diberikan. Pemesanan akan dikonfirmasi setelah pembayaran diterima.';
       default:
-        return 'Pembayaran tidak berhasil diproses. Silakan coba lagi atau gunakan metode pembayaran lain.';
+        return 'Pembayaran Anda gagal diproses. Silakan coba lagi atau gunakan metode pembayaran lain.';
+    }
+  }
+
+  List<Widget> _buildActions(BuildContext context) {
+    switch (status) {
+      case 'success':
+        return [
+          ElevatedButton(
+            onPressed: () => context.go('/bookings/$bookingId'),
+            child: const Text('Lihat Pemesanan'),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton(
+            onPressed: () => context.go('/home'),
+            child: const Text('Kembali ke Beranda'),
+          ),
+        ];
+      case 'pending':
+        return [
+          ElevatedButton(
+            onPressed: () => context.go('/bookings/$bookingId'),
+            child: const Text('Lihat Detail Pemesanan'),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton(
+            onPressed: () => context.go('/home'),
+            child: const Text('Kembali ke Beranda'),
+          ),
+        ];
+      default:
+        return [
+          ElevatedButton(
+            onPressed: () => context.go('/payment/$bookingId'),
+            child: const Text('Coba Lagi'),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton(
+            onPressed: () => context.go('/home'),
+            child: const Text('Kembali ke Beranda'),
+          ),
+        ];
     }
   }
 }

@@ -11,13 +11,13 @@ class DriverBloc extends Bloc<DriverEvent, DriverState> {
 
   DriverBloc({required this.apiClient}) : super(DriverInitial()) {
     on<LoadDriverDashboard>(_onLoadDashboard);
-    on<ToggleDriverAvailability>(_onToggleAvailability);
+    on<ToggleAvailability>(_onToggleAvailability);
     on<LoadDriverTrips>(_onLoadTrips);
     on<LoadTripDetail>(_onLoadTripDetail);
-    on<CompleteTripEvent>(_onCompleteTrip);
-    on<LoadFuelLogs>(_onLoadFuelLogs);
-    on<SubmitFuelLog>(_onSubmitFuelLog);
+    on<StartTrip>(_onStartTrip);
+    on<EndTrip>(_onEndTrip);
     on<LoadDriverEarnings>(_onLoadEarnings);
+    on<SubmitFuelLog>(_onSubmitFuelLog);
   }
 
   Future<void> _onLoadDashboard(LoadDriverDashboard event, Emitter<DriverState> emit) async {
@@ -26,29 +26,36 @@ class DriverBloc extends Bloc<DriverEvent, DriverState> {
       final response = await apiClient.get(ApiEndpoints.driverDashboard);
       final data = response.data['data'];
 
-      final trips = (data['todayTrips'] as List?)
+      Booking? activeTrip;
+      if (data['activeTrip'] != null) {
+        activeTrip = Booking.fromJson(data['activeTrip'] as Map<String, dynamic>);
+      }
+
+      final upcomingTrips = (data['upcomingTrips'] as List?)
               ?.map((json) => Booking.fromJson(json as Map<String, dynamic>))
               .toList() ??
           [];
 
       emit(DriverDashboardLoaded(
-        todayTrips: trips,
-        isAvailable: data['isAvailable'] as bool? ?? false,
+        isAvailable: data['isAvailable'] as bool? ?? true,
+        tripsToday: data['tripsToday'] as int? ?? 0,
         totalTrips: data['totalTrips'] as int? ?? 0,
         rating: (data['rating'] as num?)?.toDouble() ?? 0.0,
-        todayEarnings: (data['todayEarnings'] as num?)?.toDouble() ?? 0.0,
+        activeTrip: activeTrip,
+        upcomingTrips: upcomingTrips,
       ));
     } catch (e) {
       emit(const DriverError(message: 'Gagal memuat dashboard.'));
     }
   }
 
-  Future<void> _onToggleAvailability(ToggleDriverAvailability event, Emitter<DriverState> emit) async {
+  Future<void> _onToggleAvailability(ToggleAvailability event, Emitter<DriverState> emit) async {
     try {
-      await apiClient.patch(
+      await apiClient.put(
         ApiEndpoints.driverAvailability,
         data: {'isAvailable': event.isAvailable},
       );
+      emit(DriverAvailabilityUpdated(isAvailable: event.isAvailable));
       add(LoadDriverDashboard());
     } catch (e) {
       emit(const DriverError(message: 'Gagal mengubah status ketersediaan.'));
@@ -58,17 +65,20 @@ class DriverBloc extends Bloc<DriverEvent, DriverState> {
   Future<void> _onLoadTrips(LoadDriverTrips event, Emitter<DriverState> emit) async {
     emit(DriverLoading());
     try {
-      final params = <String, dynamic>{};
-      if (event.status != null) params['status'] = event.status;
+      final queryParams = <String, dynamic>{};
+      if (event.status != null) queryParams['status'] = event.status;
 
-      final response = await apiClient.get(ApiEndpoints.driverTrips, queryParameters: params);
+      final response = await apiClient.get(
+        ApiEndpoints.driverTrips,
+        queryParameters: queryParams,
+      );
       final trips = (response.data['data'] as List)
           .map((json) => Booking.fromJson(json as Map<String, dynamic>))
           .toList();
 
       emit(DriverTripsLoaded(trips: trips));
     } catch (e) {
-      emit(const DriverError(message: 'Gagal memuat daftar perjalanan.'));
+      emit(const DriverError(message: 'Gagal memuat daftar trip.'));
     }
   }
 
@@ -77,32 +87,55 @@ class DriverBloc extends Bloc<DriverEvent, DriverState> {
     try {
       final response = await apiClient.get(ApiEndpoints.driverTripById(event.tripId));
       final trip = Booking.fromJson(response.data['data'] as Map<String, dynamic>);
-      emit(TripDetailLoaded(trip: trip));
+      emit(DriverTripDetailLoaded(trip: trip));
     } catch (e) {
-      emit(const DriverError(message: 'Gagal memuat detail perjalanan.'));
+      emit(const DriverError(message: 'Gagal memuat detail trip.'));
     }
   }
 
-  Future<void> _onCompleteTrip(CompleteTripEvent event, Emitter<DriverState> emit) async {
-    emit(DriverLoading());
+  Future<void> _onStartTrip(StartTrip event, Emitter<DriverState> emit) async {
     try {
-      await apiClient.post(ApiEndpoints.completeBooking(event.tripId));
-      emit(TripCompleted());
+      await apiClient.post('${ApiEndpoints.driverTripById(event.tripId)}/start');
+      emit(TripStarted(tripId: event.tripId));
     } catch (e) {
-      emit(const DriverError(message: 'Gagal menyelesaikan perjalanan.'));
+      emit(const DriverError(message: 'Gagal memulai trip.'));
     }
   }
 
-  Future<void> _onLoadFuelLogs(LoadFuelLogs event, Emitter<DriverState> emit) async {
+  Future<void> _onEndTrip(EndTrip event, Emitter<DriverState> emit) async {
+    try {
+      await apiClient.post('${ApiEndpoints.driverTripById(event.tripId)}/end');
+      emit(TripEnded(tripId: event.tripId));
+    } catch (e) {
+      emit(const DriverError(message: 'Gagal mengakhiri trip.'));
+    }
+  }
+
+  Future<void> _onLoadEarnings(LoadDriverEarnings event, Emitter<DriverState> emit) async {
     emit(DriverLoading());
     try {
-      final response = await apiClient.get(ApiEndpoints.fuelLogs);
-      final logs = (response.data['data'] as List)
-          .map((json) => FuelLog.fromJson(json as Map<String, dynamic>))
-          .toList();
-      emit(FuelLogsLoaded(fuelLogs: logs));
+      final queryParams = <String, dynamic>{};
+      if (event.period != null) queryParams['period'] = event.period;
+
+      final response = await apiClient.get(
+        ApiEndpoints.driverEarnings,
+        queryParameters: queryParams,
+      );
+      final data = response.data['data'];
+
+      emit(DriverEarningsLoaded(
+        totalEarnings: (data['totalEarnings'] as num?)?.toDouble() ?? 0.0,
+        earningsHistory: (data['history'] as List?)
+                ?.map((e) => e as Map<String, dynamic>)
+                .toList() ??
+            [],
+        chartData: (data['chartData'] as List?)
+                ?.map((e) => (e as num).toDouble())
+                .toList() ??
+            [],
+      ));
     } catch (e) {
-      emit(const DriverError(message: 'Gagal memuat catatan bahan bakar.'));
+      emit(const DriverError(message: 'Gagal memuat data pendapatan.'));
     }
   }
 
@@ -117,11 +150,10 @@ class DriverBloc extends Bloc<DriverEvent, DriverState> {
           extraFields: {
             'carId': event.carId,
             'liters': event.liters,
-            'costPerLiter': event.costPerLiter,
+            'totalCost': event.totalCost,
             'odometer': event.odometer,
             'fuelType': event.fuelType,
-            'stationName': event.stationName,
-            'notes': event.notes,
+            if (event.notes != null) 'notes': event.notes,
           },
         );
       } else {
@@ -130,37 +162,16 @@ class DriverBloc extends Bloc<DriverEvent, DriverState> {
           data: {
             'carId': event.carId,
             'liters': event.liters,
-            'costPerLiter': event.costPerLiter,
-            'totalCost': event.liters * event.costPerLiter,
+            'totalCost': event.totalCost,
             'odometer': event.odometer,
             'fuelType': event.fuelType,
-            'stationName': event.stationName,
-            'notes': event.notes,
+            if (event.notes != null) 'notes': event.notes,
           },
         );
       }
       emit(FuelLogSubmitted());
     } catch (e) {
-      emit(const DriverError(message: 'Gagal menyimpan catatan bahan bakar.'));
-    }
-  }
-
-  Future<void> _onLoadEarnings(LoadDriverEarnings event, Emitter<DriverState> emit) async {
-    emit(DriverLoading());
-    try {
-      final params = <String, dynamic>{};
-      if (event.period != null) params['period'] = event.period;
-
-      final response = await apiClient.get(ApiEndpoints.driverEarnings, queryParameters: params);
-      final data = response.data['data'];
-
-      emit(EarningsLoaded(
-        totalEarnings: (data['totalEarnings'] as num?)?.toDouble() ?? 0.0,
-        thisMonthEarnings: (data['thisMonthEarnings'] as num?)?.toDouble() ?? 0.0,
-        earningsHistory: (data['history'] as List?)?.map((e) => e as Map<String, dynamic>).toList() ?? [],
-      ));
-    } catch (e) {
-      emit(const DriverError(message: 'Gagal memuat data penghasilan.'));
+      emit(const DriverError(message: 'Gagal menyimpan log BBM.'));
     }
   }
 }

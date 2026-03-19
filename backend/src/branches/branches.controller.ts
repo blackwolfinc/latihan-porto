@@ -30,7 +30,7 @@ export class BranchesController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.branchesService.findAll({ city, search, page: +page || 1, limit: +limit || 10 });
+    return this.branchesService.findAll({ city, search, page: Number(page) || 1, limit: Number(limit) || 10 });
   }
 
   @Get(':id')

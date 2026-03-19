@@ -22,7 +22,7 @@ export class GpsController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.gpsService.getCarHistory(id, { startDate, endDate, page: +page || 1, limit: +limit || 100 });
+    return this.gpsService.getCarHistory(id, { startDate, endDate, page: Number(page) || 1, limit: Number(limit) || 100 });
   }
 
   @Get('booking/:id/route')

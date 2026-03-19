@@ -19,8 +19,8 @@ export class NotificationsController {
     @Query('limit') limit?: number,
   ) {
     return this.notificationsService.findByUser(userId, {
-      page: +page || 1,
-      limit: +limit || 10,
+      page: Number(page) || 1,
+      limit: Number(limit) || 10,
     });
   }
 

@@ -33,7 +33,7 @@ export class UsersController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.usersService.findAll({ role, branchId, search, page: +page || 1, limit: +limit || 10 });
+    return this.usersService.findAll({ role, branchId, search, page: Number(page) || 1, limit: Number(limit) || 10 });
   }
 
   @Get(':id')

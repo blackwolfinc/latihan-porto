@@ -29,7 +29,7 @@ export class CustomersController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.customersService.findAll({ search, page: +page || 1, limit: +limit || 10 });
+    return this.customersService.findAll({ search, page: Number(page) || 1, limit: Number(limit) || 10 });
   }
 
   @Get(':id')
@@ -47,7 +47,7 @@ export class CustomersController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.customersService.getHistory(id, { page: +page || 1, limit: +limit || 10 });
+    return this.customersService.getHistory(id, { page: Number(page) || 1, limit: Number(limit) || 10 });
   }
 
   @Patch(':id')

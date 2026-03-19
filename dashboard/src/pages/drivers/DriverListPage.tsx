@@ -1,35 +1,29 @@
-import React, { useEffect, useState } from 'react';
-import { Table, Card, Button, Space, Input, Select, Avatar, Rate, message } from 'antd';
-import { PlusOutlined, SearchOutlined, EyeOutlined, EditOutlined, UserOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Table, Button, Space, Input, Select, Avatar, Rate, Modal, message } from 'antd';
+import { PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined, SearchOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import PageHeader from '@/components/shared/PageHeader';
 import StatusTag from '@/components/ui/StatusTag';
-import { driversService, type DriverFilters } from '@/services/drivers.service';
-import type { Driver } from '@/types';
-import { DriverStatus } from '@/types';
+import { driversService } from '@/services/drivers.service';
+import type { Driver, DriverStatus } from '@/types';
+
+const { Option } = Select;
 
 const DriverListPage: React.FC = () => {
+  const navigate = useNavigate();
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(false);
-  const [pagination, setPagination] = useState<TablePaginationConfig>({ current: 1, pageSize: 10, total: 0 });
-  const [filters, setFilters] = useState<DriverFilters>({});
-  const navigate = useNavigate();
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<DriverStatus | undefined>();
 
-  useEffect(() => {
-    loadDrivers();
-  }, [pagination.current, pagination.pageSize, filters]);
-
-  const loadDrivers = async () => {
+  const fetchDrivers = async () => {
     setLoading(true);
     try {
-      const { data } = await driversService.getAll({
-        page: pagination.current,
-        limit: pagination.pageSize,
-        ...filters,
-      });
+      const { data } = await driversService.getAll({ page, limit: 10, search: search || undefined, status: statusFilter });
       setDrivers(data.data);
-      setPagination((prev) => ({ ...prev, total: data.meta.total }));
+      setTotal(data.meta.total);
     } catch {
       message.error('Gagal memuat data driver');
     } finally {
@@ -37,56 +31,64 @@ const DriverListPage: React.FC = () => {
     }
   };
 
-  const columns: ColumnsType<Driver> = [
+  useEffect(() => { fetchDrivers(); }, [page, search, statusFilter]);
+
+  const handleDelete = (id: string) => {
+    Modal.confirm({
+      title: 'Hapus Driver',
+      content: 'Apakah Anda yakin ingin menghapus driver ini?',
+      okText: 'Hapus',
+      okType: 'danger',
+      cancelText: 'Batal',
+      onOk: async () => {
+        try {
+          await driversService.delete(id);
+          message.success('Driver berhasil dihapus');
+          fetchDrivers();
+        } catch {
+          message.error('Gagal menghapus driver');
+        }
+      },
+    });
+  };
+
+  const columns = [
     {
-      title: 'Avatar',
+      title: 'Foto',
       key: 'avatar',
       width: 60,
-      render: (_, record) => (
+      render: (_: any, record: Driver) => (
         <Avatar src={record.user?.avatar} icon={<UserOutlined />} />
       ),
     },
     {
       title: 'Nama',
       key: 'name',
-      render: (_, record) => <strong>{record.user?.name || '-'}</strong>,
+      render: (_: any, record: Driver) => record.user?.name || '-',
     },
-    {
-      title: 'No. SIM',
-      dataIndex: 'licenseNumber',
-      key: 'licenseNumber',
-    },
-    {
-      title: 'Tipe SIM',
-      dataIndex: 'licenseType',
-      key: 'licenseType',
-    },
+    { title: 'No. SIM', dataIndex: 'licenseNumber', key: 'licenseNumber' },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (status) => <StatusTag type="driver" status={status} />,
+      render: (status: string) => <StatusTag status={status} type="driver" />,
     },
     {
       title: 'Rating',
       dataIndex: 'rating',
       key: 'rating',
-      render: (rating) => <Rate disabled defaultValue={rating || 0} allowHalf style={{ fontSize: 14 }} />,
+      render: (rating: number) => rating ? <Rate disabled defaultValue={rating} allowHalf style={{ fontSize: 14 }} /> : '-',
     },
-    {
-      title: 'Total Trip',
-      dataIndex: 'totalTrips',
-      key: 'totalTrips',
-      sorter: true,
-    },
+    { title: 'Total Trip', dataIndex: 'totalTrips', key: 'totalTrips' },
     {
       title: 'Aksi',
       key: 'action',
-      width: 120,
-      render: (_, record) => (
+      width: 150,
+      render: (_: any, record: Driver) => (
         <Space>
           <Button type="link" icon={<EyeOutlined />} onClick={() => navigate(`/drivers/${record.id}`)} />
           <Button type="link" icon={<EditOutlined />} onClick={() => navigate(`/drivers/${record.id}/edit`)} />
+          <Button type="link" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record.id)} />
         </Space>
       ),
     },
@@ -94,42 +96,39 @@ const DriverListPage: React.FC = () => {
 
   return (
     <div>
-      <PageHeader title="Manajemen Driver" subtitle="Kelola semua driver rental">
+      <PageHeader
+        title="Daftar Driver"
+        subtitle={`Total ${total} driver`}
+        breadcrumbs={[{ title: 'Dashboard', path: '/' }, { title: 'Driver' }]}
+      >
         <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/drivers/create')}>
           Tambah Driver
         </Button>
       </PageHeader>
-      <Card>
-        <Space style={{ marginBottom: 16 }} wrap>
-          <Input
-            placeholder="Cari nama/SIM..."
-            prefix={<SearchOutlined />}
-            style={{ width: 250 }}
-            onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
-            allowClear
-          />
-          <Select
-            placeholder="Status"
-            allowClear
-            style={{ width: 180 }}
-            onChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}
-            options={Object.values(DriverStatus).map((s) => ({ label: s, value: s }))}
-          />
-        </Space>
-        <Table
-          columns={columns}
-          dataSource={drivers}
-          rowKey="id"
-          loading={loading}
-          pagination={{
-            ...pagination,
-            showSizeChanger: true,
-            showTotal: (total) => `Total ${total} driver`,
-          }}
-          onChange={(pag) => setPagination(pag)}
-          scroll={{ x: 900 }}
+
+      <Space style={{ marginBottom: 16 }} size={12}>
+        <Input
+          placeholder="Cari driver..."
+          prefix={<SearchOutlined />}
+          allowClear
+          style={{ width: 220 }}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
         />
-      </Card>
+        <Select placeholder="Status" allowClear style={{ width: 160 }} onChange={(val) => { setStatusFilter(val); setPage(1); }}>
+          <Option value="AVAILABLE">Tersedia</Option>
+          <Option value="ON_TRIP">Dalam Perjalanan</Option>
+          <Option value="OFF_DUTY">Libur</Option>
+          <Option value="INACTIVE">Nonaktif</Option>
+        </Select>
+      </Space>
+
+      <Table
+        columns={columns}
+        dataSource={drivers}
+        rowKey="id"
+        loading={loading}
+        pagination={{ current: page, total, pageSize: 10, onChange: setPage, showTotal: (t) => `Total ${t} data` }}
+      />
     </div>
   );
 };

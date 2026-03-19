@@ -9,10 +9,10 @@ abstract class DriverEvent extends Equatable {
 
 class LoadDriverDashboard extends DriverEvent {}
 
-class ToggleDriverAvailability extends DriverEvent {
+class ToggleAvailability extends DriverEvent {
   final bool isAvailable;
 
-  const ToggleDriverAvailability({required this.isAvailable});
+  const ToggleAvailability({required this.isAvailable});
 
   @override
   List<Object?> get props => [isAvailable];
@@ -36,40 +36,22 @@ class LoadTripDetail extends DriverEvent {
   List<Object?> get props => [tripId];
 }
 
-class CompleteTripEvent extends DriverEvent {
+class StartTrip extends DriverEvent {
   final String tripId;
 
-  const CompleteTripEvent({required this.tripId});
+  const StartTrip({required this.tripId});
 
   @override
   List<Object?> get props => [tripId];
 }
 
-class LoadFuelLogs extends DriverEvent {}
+class EndTrip extends DriverEvent {
+  final String tripId;
 
-class SubmitFuelLog extends DriverEvent {
-  final String carId;
-  final double liters;
-  final double costPerLiter;
-  final double odometer;
-  final String fuelType;
-  final String? stationName;
-  final String? receiptPhotoPath;
-  final String? notes;
-
-  const SubmitFuelLog({
-    required this.carId,
-    required this.liters,
-    required this.costPerLiter,
-    required this.odometer,
-    required this.fuelType,
-    this.stationName,
-    this.receiptPhotoPath,
-    this.notes,
-  });
+  const EndTrip({required this.tripId});
 
   @override
-  List<Object?> get props => [carId, liters, costPerLiter, odometer];
+  List<Object?> get props => [tripId];
 }
 
 class LoadDriverEarnings extends DriverEvent {
@@ -79,4 +61,27 @@ class LoadDriverEarnings extends DriverEvent {
 
   @override
   List<Object?> get props => [period];
+}
+
+class SubmitFuelLog extends DriverEvent {
+  final String carId;
+  final double liters;
+  final double totalCost;
+  final double odometer;
+  final String fuelType;
+  final String? receiptPhotoPath;
+  final String? notes;
+
+  const SubmitFuelLog({
+    required this.carId,
+    required this.liters,
+    required this.totalCost,
+    required this.odometer,
+    required this.fuelType,
+    this.receiptPhotoPath,
+    this.notes,
+  });
+
+  @override
+  List<Object?> get props => [carId, liters, totalCost, odometer, fuelType];
 }

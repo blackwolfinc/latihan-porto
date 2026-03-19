@@ -32,7 +32,7 @@ export class InspectionsController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.inspectionsService.findAll({ carId, bookingId, type, page: +page || 1, limit: +limit || 10 });
+    return this.inspectionsService.findAll({ carId, bookingId, type, page: Number(page) || 1, limit: Number(limit) || 10 });
   }
 
   @Get('booking/:bookingId')

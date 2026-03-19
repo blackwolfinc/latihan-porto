@@ -36,7 +36,7 @@ export class PaymentsController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.paymentsService.findAll({ status, page: +page || 1, limit: +limit || 10 });
+    return this.paymentsService.findAll({ status, page: Number(page) || 1, limit: Number(limit) || 10 });
   }
 
   @Get(':id')

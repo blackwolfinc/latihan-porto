@@ -84,7 +84,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Sewa mobil mudah dan terpercaya',
+                    'Solusi rental mobil terpercaya',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: AppColors.textSecondary,
                         ),

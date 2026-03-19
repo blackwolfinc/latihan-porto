@@ -30,7 +30,7 @@ export class FuelController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.fuelService.findAll({ carId, driverId, page: +page || 1, limit: +limit || 10 });
+    return this.fuelService.findAll({ carId, driverId, page: Number(page) || 1, limit: Number(limit) || 10 });
   }
 
   @Get(':id')

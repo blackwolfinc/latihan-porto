@@ -1,39 +1,33 @@
-import React, { useEffect, useState } from 'react';
-import { Card, Descriptions, Table, Avatar, Typography, Row, Col, Statistic, Rate, message } from 'antd';
-import { UserOutlined, ShoppingCartOutlined, DollarOutlined, StarOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Card, Descriptions, Table, Row, Col, Statistic, Button, Space, Spin, Empty, message } from 'antd';
+import { ArrowLeftOutlined } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import PageHeader from '@/components/shared/PageHeader';
 import StatusTag from '@/components/ui/StatusTag';
 import { customersService } from '@/services/customers.service';
 import type { User, Booking } from '@/types';
-import type { ColumnsType } from 'antd/es/table';
-
-const { Text } = Typography;
 
 const CustomerDetailPage: React.FC = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [customer, setCustomer] = useState<User | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [stats, setStats] = useState<{ totalBookings: number; totalSpent: number; averageRating: number } | null>(null);
   const [loading, setLoading] = useState(true);
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
 
   useEffect(() => {
-    loadData();
+    if (id) {
+      fetchCustomer(id);
+      fetchBookings(id);
+      fetchStats(id);
+    }
   }, [id]);
 
-  const loadData = async () => {
-    setLoading(true);
+  const fetchCustomer = async (customerId: string) => {
     try {
-      const [customerRes, bookingsRes, statsRes] = await Promise.allSettled([
-        customersService.getById(id!),
-        customersService.getBookingHistory(id!),
-        customersService.getStats(id!),
-      ]);
-      if (customerRes.status === 'fulfilled') setCustomer(customerRes.value.data.data);
-      if (bookingsRes.status === 'fulfilled') setBookings(bookingsRes.value.data.data);
-      if (statsRes.status === 'fulfilled') setStats(statsRes.value.data.data);
+      const { data } = await customersService.getById(customerId);
+      setCustomer(data.data);
     } catch {
       message.error('Gagal memuat data customer');
       navigate('/customers');
@@ -42,53 +36,73 @@ const CustomerDetailPage: React.FC = () => {
     }
   };
 
-  const bookingColumns: ColumnsType<Booking> = [
-    { title: 'No. Booking', dataIndex: 'bookingNumber', key: 'bookingNumber' },
-    { title: 'Mobil', key: 'car', render: (_, r) => r.car ? `${r.car.brand} ${r.car.model}` : '-' },
-    { title: 'Tanggal', dataIndex: 'startDate', key: 'startDate', render: (d) => dayjs(d).format('DD MMM YYYY') },
-    { title: 'Total', dataIndex: 'totalAmount', key: 'totalAmount', render: (a) => `Rp ${(a || 0).toLocaleString('id-ID')}` },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (s) => <StatusTag type="booking" status={s} /> },
-  ];
+  const fetchBookings = async (customerId: string) => {
+    try {
+      const { data } = await customersService.getBookingHistory(customerId);
+      setBookings(data.data);
+    } catch { /* silent */ }
+  };
 
-  if (loading || !customer) return <Card loading />;
+  const fetchStats = async (customerId: string) => {
+    try {
+      const { data } = await customersService.getStats(customerId);
+      setStats(data.data);
+    } catch { /* silent */ }
+  };
+
+  if (loading) return <div style={{ textAlign: 'center', padding: 50 }}><Spin size="large" /></div>;
+  if (!customer) return <Empty description="Customer tidak ditemukan" />;
+
+  const bookingColumns = [
+    { title: 'ID', dataIndex: 'bookingNumber', key: 'bookingNumber' },
+    { title: 'Mobil', key: 'car', render: (_: any, r: Booking) => r.car ? `${r.car.brand} ${r.car.model}` : '-' },
+    { title: 'Mulai', dataIndex: 'startDate', key: 'startDate', render: (d: string) => dayjs(d).format('DD/MM/YYYY') },
+    { title: 'Selesai', dataIndex: 'endDate', key: 'endDate', render: (d: string) => dayjs(d).format('DD/MM/YYYY') },
+    { title: 'Status', dataIndex: 'status', key: 'status', render: (s: string) => <StatusTag status={s} type="booking" /> },
+    { title: 'Total', dataIndex: 'totalAmount', key: 'totalAmount', render: (a: number) => `Rp ${a?.toLocaleString('id-ID')}` },
+  ];
 
   return (
     <div>
-      <PageHeader title={`Customer: ${customer.name}`} subtitle={customer.email} />
+      <PageHeader
+        title={customer.name}
+        breadcrumbs={[{ title: 'Dashboard', path: '/' }, { title: 'Customer', path: '/customers' }, { title: customer.name }]}
+      >
+        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/customers')}>Kembali</Button>
+      </PageHeader>
 
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24} md={6}>
-          <Card>
-            <div style={{ textAlign: 'center' }}>
-              <Avatar src={customer.avatar} icon={<UserOutlined />} size={80} />
-              <Typography.Title level={5} style={{ margin: '12px 0 4px' }}>{customer.name}</Typography.Title>
-              <Text type="secondary">{customer.email}</Text>
-              <br />
-              <Text type="secondary">{customer.phone || '-'}</Text>
-            </div>
+      <Row gutter={[16, 16]}>
+        <Col xs={24} lg={8}>
+          <Card title="Informasi Customer">
+            <Descriptions column={1} size="small">
+              <Descriptions.Item label="Nama">{customer.name}</Descriptions.Item>
+              <Descriptions.Item label="Email">{customer.email}</Descriptions.Item>
+              <Descriptions.Item label="Telepon">{customer.phone || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Bergabung">{dayjs(customer.createdAt).format('DD/MM/YYYY')}</Descriptions.Item>
+            </Descriptions>
           </Card>
+          {stats && (
+            <Card style={{ marginTop: 16 }}>
+              <Row gutter={16}>
+                <Col span={8}><Statistic title="Total Booking" value={stats.totalBookings} /></Col>
+                <Col span={8}><Statistic title="Total Spent" value={stats.totalSpent} prefix="Rp" formatter={(val) => Number(val).toLocaleString('id-ID')} /></Col>
+                <Col span={8}><Statistic title="Avg Rating" value={stats.averageRating} precision={1} /></Col>
+              </Row>
+            </Card>
+          )}
         </Col>
-        <Col xs={24} md={6}>
-          <Card><Statistic title="Total Booking" value={stats?.totalBookings || 0} prefix={<ShoppingCartOutlined />} /></Card>
-        </Col>
-        <Col xs={24} md={6}>
-          <Card><Statistic title="Total Pengeluaran" value={stats?.totalSpent || 0} prefix="Rp" formatter={(v) => `${Number(v).toLocaleString('id-ID')}`} /></Card>
-        </Col>
-        <Col xs={24} md={6}>
-          <Card>
-            <Statistic title="Rata-rata Rating" value={stats?.averageRating || 0} precision={1} prefix={<StarOutlined />} />
+        <Col xs={24} lg={16}>
+          <Card title="Riwayat Booking">
+            <Table
+              columns={bookingColumns}
+              dataSource={bookings}
+              rowKey="id"
+              size="small"
+              locale={{ emptyText: <Empty description="Belum ada riwayat booking" /> }}
+            />
           </Card>
         </Col>
       </Row>
-
-      <Card title="Riwayat Booking">
-        <Table
-          columns={bookingColumns}
-          dataSource={bookings}
-          rowKey="id"
-          locale={{ emptyText: 'Belum ada riwayat booking' }}
-        />
-      </Card>
     </div>
   );
 };

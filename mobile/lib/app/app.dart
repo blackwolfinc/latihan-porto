@@ -17,7 +17,7 @@ class RentalApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp.router(
-        title: 'RentalKu',
+        title: 'Caritahub Rental',
         theme: AppTheme.lightTheme,
         routerConfig: appRouter,
         debugShowCheckedModeBanner: false,

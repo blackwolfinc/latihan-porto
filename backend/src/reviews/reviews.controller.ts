@@ -25,7 +25,7 @@ export class ReviewsController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.reviewsService.findAll({ page: +page || 1, limit: +limit || 10 });
+    return this.reviewsService.findAll({ page: Number(page) || 1, limit: Number(limit) || 10 });
   }
 
   @Get('car/:carId')

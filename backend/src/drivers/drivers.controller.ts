@@ -30,7 +30,7 @@ export class DriversController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.driversService.findAll({ status, search, page: +page || 1, limit: +limit || 10 });
+    return this.driversService.findAll({ status, search, page: Number(page) || 1, limit: Number(limit) || 10 });
   }
 
   @Get('available')
