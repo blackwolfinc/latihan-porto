@@ -18,6 +18,7 @@ import PageHeader from '@/components/shared/PageHeader';
 import StatCard from '@/components/ui/StatCard';
 import { reportsService, type ReportFilters } from '@/services/reports.service';
 import { branchesService } from '@/services/branches.service';
+import { ExpenseCategory } from '@/types';
 import type { Branch, ExpenseSummary } from '@/types';
 
 const { RangePicker } = DatePicker;
@@ -27,9 +28,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   MAINTENANCE: '#faad14',
   INSURANCE: '#52c41a',
   TAX: '#722ed1',
-  SALARY: '#13c2c2',
-  RENT: '#eb2f96',
-  UTILITIES: '#fa8c16',
+  PARKING: '#13c2c2',
+  TOLL: '#eb2f96',
   OTHER: '#8c8c8c',
 };
 
@@ -38,9 +38,8 @@ const CATEGORY_LABELS: Record<string, string> = {
   MAINTENANCE: 'Perawatan',
   INSURANCE: 'Asuransi',
   TAX: 'Pajak',
-  SALARY: 'Gaji',
-  RENT: 'Sewa',
-  UTILITIES: 'Utilitas',
+  PARKING: 'Parkir',
+  TOLL: 'Tol',
   OTHER: 'Lainnya',
 };
 
@@ -48,22 +47,21 @@ const formatRupiah = (value: number) =>
   new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value);
 
 const mockExpenseByCategory: ExpenseSummary[] = [
-  { category: 'FUEL', total: 28000000, count: 45, percentage: 22 },
-  { category: 'MAINTENANCE', total: 35000000, count: 18, percentage: 27 },
-  { category: 'INSURANCE', total: 18000000, count: 6, percentage: 14 },
-  { category: 'TAX', total: 12000000, count: 8, percentage: 9 },
-  { category: 'SALARY', total: 25000000, count: 10, percentage: 19 },
-  { category: 'RENT', total: 8000000, count: 2, percentage: 6 },
-  { category: 'UTILITIES', total: 3000000, count: 5, percentage: 2 },
-  { category: 'OTHER', total: 1500000, count: 3, percentage: 1 },
+  { category: ExpenseCategory.FUEL, total: 28000000, count: 45, percentage: 22 },
+  { category: ExpenseCategory.MAINTENANCE, total: 35000000, count: 18, percentage: 27 },
+  { category: ExpenseCategory.INSURANCE, total: 18000000, count: 6, percentage: 14 },
+  { category: ExpenseCategory.TAX, total: 12000000, count: 8, percentage: 9 },
+  { category: ExpenseCategory.PARKING, total: 8000000, count: 200, percentage: 7 },
+  { category: ExpenseCategory.TOLL, total: 5000000, count: 150, percentage: 4 },
+  { category: ExpenseCategory.OTHER, total: 1500000, count: 3, percentage: 1 },
 ];
 
 const mockExpenseByBranch = [
-  { branchName: 'Jakarta Pusat', total: 42000000, fuel: 12000000, maintenance: 15000000, other: 15000000 },
-  { branchName: 'Jakarta Selatan', total: 35000000, fuel: 9000000, maintenance: 12000000, other: 14000000 },
-  { branchName: 'Bandung', total: 25000000, fuel: 7000000, maintenance: 8000000, other: 10000000 },
-  { branchName: 'Surabaya', total: 18000000, fuel: 5000000, maintenance: 6000000, other: 7000000 },
-  { branchName: 'Yogyakarta', total: 10500000, fuel: 3000000, maintenance: 4000000, other: 3500000 },
+  { branchId: '1', branchName: 'Jakarta Pusat', total: 42000000 },
+  { branchId: '2', branchName: 'Jakarta Selatan', total: 35000000 },
+  { branchId: '3', branchName: 'Bandung', total: 25000000 },
+  { branchId: '4', branchName: 'Surabaya', total: 18000000 },
+  { branchId: '5', branchName: 'Yogyakarta', total: 10500000 },
 ];
 
 const ExpenseReportPage: React.FC = () => {
@@ -237,9 +235,7 @@ const ExpenseReportPage: React.FC = () => {
                   <YAxis type="category" dataKey="branchName" width={120} />
                   <Tooltip formatter={(v: number) => formatRupiah(v)} />
                   <Legend />
-                  <Bar dataKey="fuel" name="BBM" fill="#1677ff" stackId="stack" />
-                  <Bar dataKey="maintenance" name="Perawatan" fill="#faad14" stackId="stack" />
-                  <Bar dataKey="other" name="Lainnya" fill="#8c8c8c" stackId="stack" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="total" name="Total" fill="#1677ff" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </Card>

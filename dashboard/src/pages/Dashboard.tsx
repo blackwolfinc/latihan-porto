@@ -104,7 +104,8 @@ const Dashboard: React.FC = () => {
 
   return (
     <div>
-      <Title level={4} style={{ marginBottom: 24 }}>Dashboard</Title>
+      <Title level={4} style={{ marginBottom: 4 }}>Laporan & Analisa</Title>
+      <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>Overview performa bisnis rental Anda</Text>
 
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} lg={6}>

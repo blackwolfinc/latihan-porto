@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'dart:io';
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../shared/widgets/custom_app_bar.dart';
 import '../../auth/bloc/auth_bloc.dart';
+import '../../auth/bloc/auth_event.dart';
 import '../../auth/bloc/auth_state.dart';
 
 class EditProfilePage extends StatefulWidget {
@@ -20,20 +23,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
-  bool _isLoading = false;
+  String? _avatarUrl;
+  String? _newAvatarPath;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
     super.initState();
-    _loadUserData();
-  }
-
-  void _loadUserData() {
     final authState = context.read<AuthBloc>().state;
     if (authState is AuthAuthenticated) {
       _nameController.text = authState.user.name;
       _phoneController.text = authState.user.phone ?? '';
       _emailController.text = authState.user.email;
+      _avatarUrl = authState.user.avatar;
     }
   }
 
@@ -45,12 +47,68 @@ class _EditProfilePageState extends State<EditProfilePage> {
     super.dispose();
   }
 
-  Future<void> _saveProfile() async {
+  Future<void> _pickAvatar() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(AppSizes.paddingMD),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Pilih Foto',
+              style: Theme.of(ctx).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.camera_alt, color: AppColors.primary),
+              title: const Text('Kamera'),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library, color: AppColors.primary),
+              title: const Text('Galeri'),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+
+    if (source != null) {
+      final picker = ImagePicker();
+      final image = await picker.pickImage(
+        source: source,
+        imageQuality: AppConstants.imageQuality,
+        maxWidth: AppConstants.maxImageWidth,
+      );
+      if (image != null) {
+        setState(() => _newAvatarPath = image.path);
+      }
+    }
+  }
+
+  Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+    setState(() => _isSubmitting = true);
     try {
       final apiClient = ApiClient();
+
+      // Upload avatar if changed
+      if (_newAvatarPath != null) {
+        await apiClient.uploadFile(
+          ApiEndpoints.uploadAvatar,
+          filePath: _newAvatarPath!,
+          fieldName: 'avatar',
+        );
+      }
+
+      // Update profile
       await apiClient.put(
         ApiEndpoints.updateProfile,
         data: {
@@ -61,117 +119,105 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profil berhasil diperbarui'),
-            backgroundColor: AppColors.success,
-          ),
+          const SnackBar(content: Text('Profil berhasil diperbarui'), backgroundColor: AppColors.success),
         );
+        // Refresh auth state
+        context.read<AuthBloc>().add(CheckAuthStatus());
         context.pop();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Gagal memperbarui profil. Silakan coba lagi.'),
-            backgroundColor: AppColors.error,
-          ),
+          const SnackBar(content: Text('Gagal memperbarui profil'), backgroundColor: AppColors.error),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomAppBar(title: 'Edit Profil'),
+      appBar: AppBar(title: const Text('Edit Profil')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSizes.paddingMD),
+        padding: const EdgeInsets.all(AppSizes.paddingLG),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
               const SizedBox(height: 16),
-              // Avatar with camera button
-              Stack(
-                children: [
-                  BlocBuilder<AuthBloc, AuthState>(
-                    builder: (context, state) {
-                      String name = 'U';
-                      if (state is AuthAuthenticated) {
-                        name = state.user.name;
-                      }
-                      return CircleAvatar(
-                        radius: AppSizes.avatarLG / 2 + 16,
-                        backgroundColor: AppColors.primary,
-                        child: Text(
-                          name.isNotEmpty ? name[0].toUpperCase() : 'U',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 36,
-                            fontWeight: FontWeight.bold,
-                          ),
+              // Avatar
+              GestureDetector(
+                onTap: _pickAvatar,
+                child: Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: AppSizes.avatarLG,
+                      backgroundColor: AppColors.primaryLight,
+                      backgroundImage: _newAvatarPath != null
+                          ? FileImage(File(_newAvatarPath!))
+                          : _avatarUrl != null
+                              ? CachedNetworkImageProvider(_avatarUrl!) as ImageProvider
+                              : null,
+                      child: _newAvatarPath == null && _avatarUrl == null
+                          ? Text(
+                              _nameController.text.isNotEmpty ? _nameController.text[0].toUpperCase() : 'U',
+                              style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.white),
+                            )
+                          : null,
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
                         ),
-                      );
-                    },
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: const Icon(Icons.camera_alt, color: Colors.white, size: 18),
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Fitur ubah foto akan tersedia di versi berikutnya')),
-                          );
-                        },
+                        child: const Icon(Icons.camera_alt, color: Colors.white, size: 18),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              const SizedBox(height: 32),
-
-              // Name Field
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: _pickAvatar,
+                child: const Text('Ubah Foto'),
+              ),
+              const SizedBox(height: 24),
               TextFormField(
                 controller: _nameController,
                 textCapitalization: TextCapitalization.words,
                 decoration: const InputDecoration(
-                  labelText: 'Nama',
-                  hintText: 'Masukkan nama lengkap',
+                  labelText: 'Nama Lengkap',
                   prefixIcon: Icon(Icons.person_outlined),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Nama tidak boleh kosong';
-                  }
-                  if (value.length < 3) {
-                    return 'Nama minimal 3 karakter';
-                  }
+                  if (value == null || value.isEmpty) return 'Nama tidak boleh kosong';
+                  if (value.length < 3) return 'Nama minimal 3 karakter';
                   return null;
                 },
               ),
               const SizedBox(height: 16),
-
-              // Phone Field
+              TextFormField(
+                controller: _emailController,
+                enabled: false,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  prefixIcon: Icon(Icons.email_outlined),
+                  helperText: 'Email tidak dapat diubah',
+                ),
+              ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
                 decoration: const InputDecoration(
-                  labelText: 'No. Telepon',
-                  hintText: '08xxxxxxxxxx',
+                  labelText: 'Nomor Telepon',
                   prefixIcon: Icon(Icons.phone_outlined),
                 ),
                 validator: (value) {
@@ -183,41 +229,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
-
-              // Email Field (disabled)
-              TextFormField(
-                controller: _emailController,
-                enabled: false,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  prefixIcon: const Icon(Icons.email_outlined),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _save,
+                  child: _isSubmitting
+                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Text('Simpan'),
                 ),
               ),
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Email tidak dapat diubah',
-                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // Save Button
-              ElevatedButton(
-                onPressed: _isLoading ? null : _saveProfile,
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Text('Simpan'),
-              ),
-              const SizedBox(height: 32),
             ],
           ),
         ),

@@ -5,6 +5,7 @@ import DashboardLayout from '@/layouts/DashboardLayout';
 import { useAuthStore } from '@/stores/auth.store';
 
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
+const OperationalDashboard = lazy(() => import('@/pages/OperationalDashboard'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const CarListPage = lazy(() => import('@/pages/cars/CarListPage'));
 const CarFormPage = lazy(() => import('@/pages/cars/CarFormPage'));
@@ -34,6 +35,9 @@ const ContractDetailPage = lazy(() => import('@/pages/contracts/ContractDetailPa
 const ReviewListPage = lazy(() => import('@/pages/reviews/ReviewListPage'));
 const BranchListPage = lazy(() => import('@/pages/branches/BranchListPage'));
 const BranchFormPage = lazy(() => import('@/pages/branches/BranchFormPage'));
+const InvoiceListPage = lazy(() => import('@/pages/invoices/InvoiceListPage'));
+const InvoiceFormPage = lazy(() => import('@/pages/invoices/InvoiceFormPage'));
+const InvoiceDetailPage = lazy(() => import('@/pages/invoices/InvoiceDetailPage'));
 const RevenueReportPage = lazy(() => import('@/pages/reports/RevenueReportPage'));
 const FleetReportPage = lazy(() => import('@/pages/reports/FleetReportPage'));
 const ExpenseReportPage = lazy(() => import('@/pages/reports/ExpenseReportPage'));
@@ -66,7 +70,9 @@ const AppRoutes: React.FC = () => {
             </ProtectedRoute>
           }
         >
-          <Route index element={<Dashboard />} />
+          <Route index element={<Navigate to="/operational" replace />} />
+          <Route path="operational" element={<OperationalDashboard />} />
+          <Route path="dashboard" element={<Dashboard />} />
           <Route path="cars" element={<CarListPage />} />
           <Route path="cars/create" element={<CarFormPage />} />
           <Route path="cars/:id/edit" element={<CarFormPage />} />
@@ -96,6 +102,9 @@ const AppRoutes: React.FC = () => {
           <Route path="inspections/:id" element={<InspectionDetailPage />} />
           <Route path="contracts" element={<ContractListPage />} />
           <Route path="contracts/:id" element={<ContractDetailPage />} />
+          <Route path="invoices" element={<InvoiceListPage />} />
+          <Route path="invoices/create" element={<InvoiceFormPage />} />
+          <Route path="invoices/:id" element={<InvoiceDetailPage />} />
           <Route path="reviews" element={<ReviewListPage />} />
           <Route path="branches" element={<BranchListPage />} />
           <Route path="branches/create" element={<BranchFormPage />} />

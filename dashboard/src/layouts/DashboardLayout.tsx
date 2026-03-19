@@ -29,12 +29,14 @@ const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
 
 const menuItems = [
-  { key: '/', icon: <DashboardOutlined />, label: 'Dashboard' },
+  { key: '/operational', icon: <DashboardOutlined />, label: 'Operasional' },
+  { key: '/dashboard', icon: <BarChartOutlined />, label: 'Laporan & Analisa' },
   { key: '/cars', icon: <CarOutlined />, label: 'Mobil' },
   { key: '/bookings', icon: <CalendarOutlined />, label: 'Booking' },
   { key: '/scheduling', icon: <ScheduleOutlined />, label: 'Scheduling' },
   { key: '/drivers', icon: <TeamOutlined />, label: 'Driver' },
   { key: '/customers', icon: <UserOutlined />, label: 'Customer' },
+  { key: '/invoices', icon: <FileTextOutlined />, label: 'Invoice' },
   { key: '/payments', icon: <CreditCardOutlined />, label: 'Pembayaran' },
   { key: '/maintenance', icon: <ToolOutlined />, label: 'Maintenance' },
   { key: '/fuel', icon: <DollarOutlined />, label: 'BBM & Biaya' },

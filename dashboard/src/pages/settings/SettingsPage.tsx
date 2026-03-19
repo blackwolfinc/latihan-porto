@@ -1,396 +1,611 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Card,
   Tabs,
+  Card,
   Form,
   Input,
   Button,
-  Upload,
   Table,
-  Tag,
-  Switch,
   Space,
-  Typography,
+  Modal,
+  Select,
+  Switch,
   message,
+  Upload,
+  Avatar,
+  Tag,
+  Popconfirm,
   Row,
   Col,
-  Avatar,
-  Select,
-  Modal,
   Divider,
 } from 'antd';
 import {
+  SaveOutlined,
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
   UploadOutlined,
   UserOutlined,
-  PlusOutlined,
-  SaveOutlined,
-  MailOutlined,
   BellOutlined,
-  MessageOutlined,
+  TeamOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
 import PageHeader from '@/components/shared/PageHeader';
-import { Role } from '@/types';
-import type { User } from '@/types';
+import { useAuthStore } from '@/stores/auth.store';
+import type { User, Role } from '@/types';
 
-const { Text, Title } = Typography;
+const { TextArea } = Input;
 
-const mockUsers: Partial<User>[] = [
-  { id: '1', name: 'Admin Utama', email: 'admin@caritahub.com', role: Role.SUPER_ADMIN, isActive: true },
-  { id: '2', name: 'Budi Operator', email: 'budi@caritahub.com', role: Role.ADMIN, isActive: true },
-  { id: '3', name: 'Siti Staff', email: 'siti@caritahub.com', role: Role.STAFF, isActive: true },
-  { id: '4', name: 'Ahmad Driver', email: 'ahmad@caritahub.com', role: Role.DRIVER, isActive: true },
-  { id: '5', name: 'Dewi Staff', email: 'dewi@caritahub.com', role: Role.STAFF, isActive: false },
+const mockUsers: (User & { status: string })[] = [
+  { id: '1', name: 'Admin Utama', email: 'admin@caritahub.com', role: 'SUPER_ADMIN' as Role, status: 'active', phone: '081234567890', isActive: true, createdAt: '2025-01-01', updatedAt: '2025-01-01' },
+  { id: '2', name: 'Manager Jakarta', email: 'manager.jkt@caritahub.com', role: 'ADMIN' as Role, status: 'active', phone: '081234567891', isActive: true, createdAt: '2025-02-01', updatedAt: '2025-02-01' },
+  { id: '3', name: 'Staff Bandung', email: 'staff.bdg@caritahub.com', role: 'STAFF' as Role, status: 'active', phone: '081234567892', isActive: true, createdAt: '2025-03-01', updatedAt: '2025-03-01' },
+  { id: '4', name: 'Staff Surabaya', email: 'staff.sby@caritahub.com', role: 'STAFF' as Role, status: 'inactive', phone: '081234567893', isActive: false, createdAt: '2025-04-01', updatedAt: '2025-04-01' },
 ];
 
 const roleColors: Record<string, string> = {
   SUPER_ADMIN: 'red',
   ADMIN: 'blue',
   STAFF: 'green',
-  DRIVER: 'orange',
-  CUSTOMER: 'default',
 };
 
+const roleLabels: Record<string, string> = {
+  SUPER_ADMIN: 'Super Admin',
+  ADMIN: 'Admin',
+  STAFF: 'Staff',
+};
+
+// Company Profile Tab
 const CompanyProfileTab: React.FC = () => {
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    form.setFieldsValue({
+      companyName: 'Caritahub Rental',
+      tagline: 'Solusi Rental Kendaraan Terpercaya',
+      email: 'info@rentalku.com',
+      phone: '021-12345678',
+      whatsapp: '081234567890',
+      address: 'Jl. Sudirman No. 123, Jakarta Pusat',
+      city: 'Jakarta',
+      province: 'DKI Jakarta',
+      postalCode: '10110',
+      website: 'https://rentalku.com',
+      taxId: '12.345.678.9-012.000',
+      description: 'Caritahub Rental adalah perusahaan rental kendaraan yang menyediakan berbagai jenis kendaraan untuk kebutuhan pribadi dan bisnis.',
+    });
+  }, [form]);
+
   const handleSave = async () => {
-    setSaving(true);
     try {
       await form.validateFields();
-      message.success('Profil perusahaan berhasil disimpan');
+      setSaving(true);
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      message.success('Profil perusahaan berhasil diperbarui');
     } catch {
-      message.error('Periksa kembali data yang dimasukkan');
+      // validation failed
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <Form
-      form={form}
-      layout="vertical"
-      initialValues={{
-        companyName: 'Caritahub Rental',
-        address: 'Jl. Sudirman No. 123, Jakarta Pusat',
-        phone: '021-12345678',
-        email: 'info@caritahub.com',
-        website: 'www.caritahub.com',
-      }}
-      style={{ maxWidth: 600 }}
-    >
-      <Form.Item label="Logo Perusahaan">
-        <Upload
-          listType="picture-card"
-          maxCount={1}
-          beforeUpload={() => false}
-        >
-          <div>
-            <UploadOutlined />
-            <div style={{ marginTop: 8 }}>Upload Logo</div>
-          </div>
-        </Upload>
-      </Form.Item>
+    <Card>
+      <Form form={form} layout="vertical" style={{ maxWidth: 700 }}>
+        <Row gutter={16}>
+          <Col span={16}>
+            <Form.Item name="companyName" label="Nama Perusahaan" rules={[{ required: true, message: 'Masukkan nama perusahaan!' }]}>
+              <Input placeholder="Nama perusahaan" />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item label="Logo Perusahaan">
+              <Upload listType="picture-card" maxCount={1} beforeUpload={() => false}>
+                <div>
+                  <UploadOutlined />
+                  <div style={{ marginTop: 8 }}>Upload</div>
+                </div>
+              </Upload>
+            </Form.Item>
+          </Col>
+        </Row>
 
-      <Form.Item
-        name="companyName"
-        label="Nama Perusahaan"
-        rules={[{ required: true, message: 'Masukkan nama perusahaan!' }]}
-      >
-        <Input />
-      </Form.Item>
+        <Form.Item name="tagline" label="Tagline">
+          <Input placeholder="Tagline perusahaan" />
+        </Form.Item>
 
-      <Form.Item
-        name="address"
-        label="Alamat"
-        rules={[{ required: true, message: 'Masukkan alamat!' }]}
-      >
-        <Input.TextArea rows={2} />
-      </Form.Item>
+        <Form.Item name="description" label="Deskripsi">
+          <TextArea rows={3} placeholder="Deskripsi perusahaan" />
+        </Form.Item>
 
-      <Row gutter={16}>
-        <Col xs={24} md={12}>
-          <Form.Item
-            name="phone"
-            label="Telepon"
-            rules={[{ required: true, message: 'Masukkan telepon!' }]}
-          >
-            <Input />
-          </Form.Item>
-        </Col>
-        <Col xs={24} md={12}>
-          <Form.Item name="email" label="Email">
-            <Input />
-          </Form.Item>
-        </Col>
-      </Row>
+        <Divider>Kontak</Divider>
 
-      <Form.Item name="website" label="Website">
-        <Input />
-      </Form.Item>
+        <Row gutter={16}>
+          <Col xs={24} md={8}>
+            <Form.Item name="email" label="Email" rules={[{ type: 'email', message: 'Email tidak valid!' }]}>
+              <Input placeholder="Email perusahaan" />
+            </Form.Item>
+          </Col>
+          <Col xs={24} md={8}>
+            <Form.Item name="phone" label="Telepon">
+              <Input placeholder="Nomor telepon" />
+            </Form.Item>
+          </Col>
+          <Col xs={24} md={8}>
+            <Form.Item name="whatsapp" label="WhatsApp">
+              <Input placeholder="Nomor WhatsApp" />
+            </Form.Item>
+          </Col>
+        </Row>
 
-      <Button type="primary" icon={<SaveOutlined />} onClick={handleSave} loading={saving}>
-        Simpan Perubahan
-      </Button>
-    </Form>
+        <Divider>Alamat</Divider>
+
+        <Form.Item name="address" label="Alamat Lengkap">
+          <TextArea rows={2} placeholder="Alamat lengkap" />
+        </Form.Item>
+
+        <Row gutter={16}>
+          <Col xs={24} md={8}>
+            <Form.Item name="city" label="Kota">
+              <Input placeholder="Kota" />
+            </Form.Item>
+          </Col>
+          <Col xs={24} md={8}>
+            <Form.Item name="province" label="Provinsi">
+              <Input placeholder="Provinsi" />
+            </Form.Item>
+          </Col>
+          <Col xs={24} md={8}>
+            <Form.Item name="postalCode" label="Kode Pos">
+              <Input placeholder="Kode pos" />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Divider>Lainnya</Divider>
+
+        <Row gutter={16}>
+          <Col xs={24} md={12}>
+            <Form.Item name="website" label="Website">
+              <Input placeholder="https://example.com" />
+            </Form.Item>
+          </Col>
+          <Col xs={24} md={12}>
+            <Form.Item name="taxId" label="NPWP">
+              <Input placeholder="NPWP perusahaan" />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Button type="primary" icon={<SaveOutlined />} onClick={handleSave} loading={saving}>
+          Simpan Perubahan
+        </Button>
+      </Form>
+    </Card>
   );
 };
 
+// User Management Tab
 const UserManagementTab: React.FC = () => {
-  const [users, setUsers] = useState<Partial<User>[]>(mockUsers);
-  const [addModalVisible, setAddModalVisible] = useState(false);
-  const [addForm] = Form.useForm();
+  const [users, setUsers] = useState(mockUsers);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<(User & { status: string }) | null>(null);
+  const [form] = Form.useForm();
+  const [saving, setSaving] = useState(false);
 
-  const handleAddUser = async () => {
+  const handleAdd = () => {
+    setEditingUser(null);
+    form.resetFields();
+    setModalOpen(true);
+  };
+
+  const handleEdit = (user: User & { status: string }) => {
+    setEditingUser(user);
+    form.setFieldsValue(user);
+    setModalOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    setUsers((prev) => prev.filter((u) => u.id !== id));
+    message.success('Pengguna berhasil dihapus');
+  };
+
+  const handleSave = async () => {
     try {
-      const values = await addForm.validateFields();
-      const newUser: Partial<User> = {
-        id: String(Date.now()),
-        ...values,
-        isActive: true,
-      };
-      setUsers([...users, newUser]);
-      setAddModalVisible(false);
-      addForm.resetFields();
-      message.success('User berhasil ditambahkan');
+      const values = await form.validateFields();
+      setSaving(true);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      if (editingUser) {
+        setUsers((prev) => prev.map((u) => (u.id === editingUser.id ? { ...u, ...values } : u)));
+        message.success('Pengguna berhasil diperbarui');
+      } else {
+        const newUser = { ...values, id: Date.now().toString(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+        setUsers((prev) => [...prev, newUser]);
+        message.success('Pengguna berhasil ditambahkan');
+      }
+      setModalOpen(false);
     } catch {
       // validation failed
+    } finally {
+      setSaving(false);
     }
   };
 
-  const columns: ColumnsType<Partial<User>> = [
+  const columns = [
     {
-      title: 'User',
+      title: 'Pengguna',
       key: 'user',
-      render: (_, record) => (
+      render: (_: unknown, r: User & { status: string }) => (
         <Space>
-          <Avatar icon={<UserOutlined />} src={record.avatar} />
+          <Avatar icon={<UserOutlined />} style={{ background: roleColors[r.role] === 'red' ? '#ff4d4f' : roleColors[r.role] === 'blue' ? '#1677ff' : '#52c41a' }}>
+            {r.name?.[0]}
+          </Avatar>
           <div>
-            <Text strong>{record.name}</Text>
-            <br />
-            <Text type="secondary" style={{ fontSize: 12 }}>{record.email}</Text>
+            <div style={{ fontWeight: 500 }}>{r.name}</div>
+            <div style={{ fontSize: 12, color: '#8c8c8c' }}>{r.email}</div>
           </div>
         </Space>
       ),
     },
+    { title: 'Telepon', dataIndex: 'phone', key: 'phone' },
     {
       title: 'Role',
       dataIndex: 'role',
       key: 'role',
-      render: (role: string) => (
-        <Tag color={roleColors[role] || 'default'}>{role}</Tag>
-      ),
+      render: (role: string) => <Tag color={roleColors[role]}>{roleLabels[role] || role}</Tag>,
     },
     {
       title: 'Status',
-      dataIndex: 'isActive',
-      key: 'isActive',
-      render: (active: boolean) => (
-        <Tag color={active ? 'green' : 'default'}>
-          {active ? 'Aktif' : 'Nonaktif'}
-        </Tag>
-      ),
+      dataIndex: 'status',
+      key: 'status',
+      render: (s: string) => <Tag color={s === 'active' ? 'green' : 'default'}>{s === 'active' ? 'Aktif' : 'Nonaktif'}</Tag>,
     },
     {
       title: 'Aksi',
       key: 'action',
-      width: 100,
-      render: () => (
-        <Button type="link" size="small">Edit</Button>
+      width: 120,
+      render: (_: unknown, r: User & { status: string }) => (
+        <Space>
+          <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(r)} />
+          <Popconfirm title="Hapus pengguna ini?" onConfirm={() => handleDelete(r.id)} okText="Hapus" cancelText="Batal">
+            <Button type="link" danger icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </Space>
       ),
     },
   ];
 
   return (
     <>
-      <div style={{ marginBottom: 16 }}>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setAddModalVisible(true)}>
-          Tambah User
-        </Button>
-      </div>
-      <Table
-        columns={columns}
-        dataSource={users}
-        rowKey="id"
-        pagination={{ pageSize: 10 }}
-        locale={{ emptyText: 'Belum ada user' }}
-      />
+      <Card
+        title="Daftar Pengguna"
+        extra={
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+            Tambah Pengguna
+          </Button>
+        }
+      >
+        <Table columns={columns} dataSource={users} rowKey="id" pagination={{ pageSize: 10, showTotal: (t) => `Total ${t} pengguna` }} />
+      </Card>
 
       <Modal
-        title="Tambah User Baru"
-        open={addModalVisible}
-        onOk={handleAddUser}
-        onCancel={() => setAddModalVisible(false)}
-        okText="Tambah"
+        title={editingUser ? 'Edit Pengguna' : 'Tambah Pengguna'}
+        open={modalOpen}
+        onCancel={() => setModalOpen(false)}
+        onOk={handleSave}
+        confirmLoading={saving}
+        okText="Simpan"
         cancelText="Batal"
       >
-        <Form form={addForm} layout="vertical">
-          <Form.Item
-            name="name"
-            label="Nama"
-            rules={[{ required: true, message: 'Masukkan nama!' }]}
-          >
+        <Form form={form} layout="vertical">
+          <Form.Item name="name" label="Nama" rules={[{ required: true, message: 'Masukkan nama!' }]}>
             <Input placeholder="Nama lengkap" />
           </Form.Item>
-          <Form.Item
-            name="email"
-            label="Email"
-            rules={[
-              { required: true, message: 'Masukkan email!' },
-              { type: 'email', message: 'Format email tidak valid!' },
-            ]}
-          >
+          <Form.Item name="email" label="Email" rules={[{ required: true, message: 'Masukkan email!' }, { type: 'email', message: 'Email tidak valid!' }]}>
             <Input placeholder="Email" />
           </Form.Item>
-          <Form.Item
-            name="role"
-            label="Role"
-            rules={[{ required: true, message: 'Pilih role!' }]}
-          >
-            <Select
-              placeholder="Pilih role"
-              options={Object.values(Role).map((r) => ({ label: r, value: r }))}
-            />
+          <Form.Item name="phone" label="Telepon">
+            <Input placeholder="Nomor telepon" />
           </Form.Item>
+          <Form.Item name="role" label="Role" rules={[{ required: true, message: 'Pilih role!' }]}>
+            <Select placeholder="Pilih role">
+              <Select.Option value="SUPER_ADMIN">Super Admin</Select.Option>
+              <Select.Option value="ADMIN">Admin</Select.Option>
+              <Select.Option value="STAFF">Staff</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item name="status" label="Status" rules={[{ required: true, message: 'Pilih status!' }]}>
+            <Select placeholder="Pilih status">
+              <Select.Option value="active">Aktif</Select.Option>
+              <Select.Option value="inactive">Nonaktif</Select.Option>
+            </Select>
+          </Form.Item>
+          {!editingUser && (
+            <Form.Item name="password" label="Password" rules={[{ required: true, message: 'Masukkan password!' }, { min: 6, message: 'Minimal 6 karakter!' }]}>
+              <Input.Password placeholder="Password" />
+            </Form.Item>
+          )}
         </Form>
       </Modal>
     </>
   );
 };
 
-const NotificationTab: React.FC = () => {
+// Roles & Permissions Tab
+const RolesTab: React.FC = () => {
+  const roles = [
+    {
+      name: 'Super Admin',
+      key: 'SUPER_ADMIN',
+      description: 'Akses penuh ke semua fitur sistem',
+      permissions: ['Dashboard', 'Mobil', 'Booking', 'Driver', 'Customer', 'Pembayaran', 'Perawatan', 'BBM', 'GPS', 'Inspeksi', 'Kontrak', 'Review', 'Cabang', 'Laporan', 'Pengaturan'],
+      color: 'red',
+    },
+    {
+      name: 'Admin',
+      key: 'ADMIN',
+      description: 'Manajemen operasional cabang',
+      permissions: ['Dashboard', 'Mobil', 'Booking', 'Driver', 'Customer', 'Pembayaran', 'Perawatan', 'BBM', 'GPS', 'Inspeksi', 'Kontrak', 'Review', 'Laporan'],
+      color: 'blue',
+    },
+    {
+      name: 'Staff',
+      key: 'STAFF',
+      description: 'Operasional harian',
+      permissions: ['Dashboard', 'Mobil', 'Booking', 'Driver', 'Customer', 'Inspeksi'],
+      color: 'green',
+    },
+  ];
+
+  return (
+    <Row gutter={[16, 16]}>
+      {roles.map((role) => (
+        <Col key={role.key} xs={24} md={8}>
+          <Card
+            title={
+              <Space>
+                <Tag color={role.color}>{role.name}</Tag>
+              </Space>
+            }
+            style={{ height: '100%' }}
+          >
+            <p style={{ color: '#8c8c8c', marginBottom: 16 }}>{role.description}</p>
+            <Divider style={{ margin: '12px 0' }}>Hak Akses</Divider>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+              {role.permissions.map((p) => (
+                <Tag key={p} color="processing" style={{ marginBottom: 4 }}>
+                  {p}
+                </Tag>
+              ))}
+            </div>
+          </Card>
+        </Col>
+      ))}
+    </Row>
+  );
+};
+
+// Notification Settings Tab
+const NotificationSettingsTab: React.FC = () => {
   const [settings, setSettings] = useState({
-    emailBookingNew: true,
-    emailBookingStatusChange: true,
+    emailNewBooking: true,
+    emailBookingStatus: true,
     emailPaymentReceived: true,
-    emailMaintenanceDue: false,
-    pushBookingNew: true,
-    pushBookingStatusChange: true,
+    emailMaintenanceDue: true,
+    emailDailyReport: false,
+    pushNewBooking: true,
+    pushBookingStatus: true,
     pushPaymentReceived: true,
     pushMaintenanceDue: true,
-    smsBookingConfirm: true,
-    smsPaymentReceived: false,
-    smsMaintenanceDue: false,
+    pushLowFuel: false,
+    whatsappNewBooking: false,
+    whatsappBookingStatus: false,
+    whatsappPaymentReceived: false,
   });
 
   const handleToggle = (key: string, value: boolean) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
-    message.success('Pengaturan notifikasi diperbarui');
   };
 
-  const NotificationRow: React.FC<{
-    label: string;
-    emailKey: string;
-    pushKey: string;
-    smsKey?: string;
-  }> = ({ label, emailKey, pushKey, smsKey }) => (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: '12px 0',
-      borderBottom: '1px solid #f0f0f0',
-    }}>
-      <Text>{label}</Text>
-      <Space size={24}>
-        <Space>
-          <MailOutlined />
-          <Switch
-            size="small"
-            checked={settings[emailKey as keyof typeof settings]}
-            onChange={(v) => handleToggle(emailKey, v)}
-          />
-        </Space>
-        <Space>
-          <BellOutlined />
-          <Switch
-            size="small"
-            checked={settings[pushKey as keyof typeof settings]}
-            onChange={(v) => handleToggle(pushKey, v)}
-          />
-        </Space>
-        {smsKey && (
-          <Space>
-            <MessageOutlined />
-            <Switch
-              size="small"
-              checked={settings[smsKey as keyof typeof settings]}
-              onChange={(v) => handleToggle(smsKey, v)}
-            />
-          </Space>
-        )}
-      </Space>
+  const handleSave = () => {
+    message.success('Pengaturan notifikasi berhasil disimpan');
+  };
+
+  const renderNotifRow = (label: string, key: string) => (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f0f0f0' }}>
+      <span>{label}</span>
+      <Switch checked={settings[key as keyof typeof settings]} onChange={(v) => handleToggle(key, v)} />
     </div>
   );
 
   return (
-    <div style={{ maxWidth: 600 }}>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '12px 0',
-        borderBottom: '2px solid #f0f0f0',
-        marginBottom: 8,
-      }}>
-        <Text strong>Notifikasi</Text>
-        <Space size={24}>
-          <Space><MailOutlined /><Text type="secondary" style={{ fontSize: 12 }}>Email</Text></Space>
-          <Space><BellOutlined /><Text type="secondary" style={{ fontSize: 12 }}>Push</Text></Space>
-          <Space><MessageOutlined /><Text type="secondary" style={{ fontSize: 12 }}>SMS</Text></Space>
-        </Space>
-      </div>
-
-      <NotificationRow
-        label="Booking baru"
-        emailKey="emailBookingNew"
-        pushKey="pushBookingNew"
-        smsKey="smsBookingConfirm"
-      />
-      <NotificationRow
-        label="Perubahan status booking"
-        emailKey="emailBookingStatusChange"
-        pushKey="pushBookingStatusChange"
-      />
-      <NotificationRow
-        label="Pembayaran diterima"
-        emailKey="emailPaymentReceived"
-        pushKey="pushPaymentReceived"
-        smsKey="smsPaymentReceived"
-      />
-      <NotificationRow
-        label="Maintenance jatuh tempo"
-        emailKey="emailMaintenanceDue"
-        pushKey="pushMaintenanceDue"
-        smsKey="smsMaintenanceDue"
-      />
-    </div>
+    <Row gutter={[16, 16]}>
+      <Col xs={24} md={8}>
+        <Card title="Notifikasi Email" size="small">
+          {renderNotifRow('Booking Baru', 'emailNewBooking')}
+          {renderNotifRow('Status Booking Berubah', 'emailBookingStatus')}
+          {renderNotifRow('Pembayaran Diterima', 'emailPaymentReceived')}
+          {renderNotifRow('Perawatan Jatuh Tempo', 'emailMaintenanceDue')}
+          {renderNotifRow('Laporan Harian', 'emailDailyReport')}
+        </Card>
+      </Col>
+      <Col xs={24} md={8}>
+        <Card title="Notifikasi Push" size="small">
+          {renderNotifRow('Booking Baru', 'pushNewBooking')}
+          {renderNotifRow('Status Booking Berubah', 'pushBookingStatus')}
+          {renderNotifRow('Pembayaran Diterima', 'pushPaymentReceived')}
+          {renderNotifRow('Perawatan Jatuh Tempo', 'pushMaintenanceDue')}
+          {renderNotifRow('BBM Rendah', 'pushLowFuel')}
+        </Card>
+      </Col>
+      <Col xs={24} md={8}>
+        <Card title="Notifikasi WhatsApp" size="small">
+          {renderNotifRow('Booking Baru', 'whatsappNewBooking')}
+          {renderNotifRow('Status Booking Berubah', 'whatsappBookingStatus')}
+          {renderNotifRow('Pembayaran Diterima', 'whatsappPaymentReceived')}
+        </Card>
+      </Col>
+      <Col span={24}>
+        <Button type="primary" icon={<SaveOutlined />} onClick={handleSave}>
+          Simpan Pengaturan Notifikasi
+        </Button>
+      </Col>
+    </Row>
   );
 };
 
-const SettingsPage: React.FC = () => {
-  const tabItems = [
+// Subscription Tab
+const SubscriptionTab: React.FC = () => {
+  const [currentPlan] = useState('PROFESSIONAL');
+
+  const plans = [
     {
-      key: 'company',
-      label: 'Profil Perusahaan',
-      children: <CompanyProfileTab />,
+      key: 'STARTER',
+      name: 'Starter',
+      price: 'Rp 299.000',
+      period: '/bulan',
+      features: ['Maks. 10 mobil', '1 cabang', '2 user', 'Laporan dasar', 'Email support'],
+      color: '#8c8c8c',
     },
     {
-      key: 'users',
-      label: 'Manajemen User',
-      children: <UserManagementTab />,
+      key: 'PROFESSIONAL',
+      name: 'Professional',
+      price: 'Rp 799.000',
+      period: '/bulan',
+      features: ['Maks. 50 mobil', '5 cabang', '10 user', 'Laporan lengkap', 'GPS tracking', 'Priority support'],
+      color: '#1677ff',
+      recommended: true,
     },
     {
-      key: 'notifications',
-      label: 'Notifikasi',
-      children: <NotificationTab />,
+      key: 'ENTERPRISE',
+      name: 'Enterprise',
+      price: 'Rp 1.999.000',
+      period: '/bulan',
+      features: ['Unlimited mobil', 'Unlimited cabang', 'Unlimited user', 'Semua fitur', 'API access', 'Dedicated support', 'Custom branding'],
+      color: '#722ed1',
     },
   ];
 
   return (
     <div>
-      <PageHeader title="Pengaturan" subtitle="Konfigurasi sistem Caritahub Rental" />
+      <div style={{ textAlign: 'center', marginBottom: 32 }}>
+        <h3 style={{ marginBottom: 4 }}>Paket Langganan Anda</h3>
+        <Tag color="blue" style={{ fontSize: 14, padding: '4px 16px' }}>
+          {plans.find((p) => p.key === currentPlan)?.name || currentPlan}
+        </Tag>
+      </div>
+      <Row gutter={[16, 16]} justify="center">
+        {plans.map((plan) => (
+          <Col key={plan.key} xs={24} md={8}>
+            <Card
+              hoverable
+              style={{
+                height: '100%',
+                borderColor: plan.key === currentPlan ? plan.color : undefined,
+                borderWidth: plan.key === currentPlan ? 2 : 1,
+              }}
+            >
+              {plan.recommended && (
+                <Tag color="blue" style={{ position: 'absolute', top: 12, right: 12, fontSize: 11 }}>
+                  Rekomendasi
+                </Tag>
+              )}
+              <div style={{ textAlign: 'center', marginBottom: 16 }}>
+                <h3 style={{ color: plan.color, marginBottom: 4 }}>{plan.name}</h3>
+                <span style={{ fontSize: 28, fontWeight: 700, color: plan.color }}>{plan.price}</span>
+                <span style={{ color: '#8c8c8c' }}>{plan.period}</span>
+              </div>
+              <Divider />
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                {plan.features.map((f, i) => (
+                  <li key={i} style={{ padding: '6px 0', fontSize: 13 }}>
+                    <span style={{ color: '#52c41a', marginRight: 8 }}>&#10003;</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <div style={{ marginTop: 20, textAlign: 'center' }}>
+                {plan.key === currentPlan ? (
+                  <Button disabled block>
+                    Paket Saat Ini
+                  </Button>
+                ) : (
+                  <Button
+                    type={plan.key === 'ENTERPRISE' ? 'primary' : 'default'}
+                    block
+                    onClick={() => message.info(`Hubungi sales untuk upgrade ke paket ${plan.name}`)}
+                  >
+                    {plan.key === 'STARTER' ? 'Downgrade' : 'Upgrade'}
+                  </Button>
+                )}
+              </div>
+            </Card>
+          </Col>
+        ))}
+      </Row>
+    </div>
+  );
+};
+
+// Main Settings Page
+const SettingsPage: React.FC = () => {
+  const tabItems = [
+    {
+      key: 'company',
+      label: (
+        <span>
+          <SettingOutlined /> Profil Perusahaan
+        </span>
+      ),
+      children: <CompanyProfileTab />,
+    },
+    {
+      key: 'users',
+      label: (
+        <span>
+          <TeamOutlined /> Manajemen Pengguna
+        </span>
+      ),
+      children: <UserManagementTab />,
+    },
+    {
+      key: 'roles',
+      label: (
+        <span>
+          <UserOutlined /> Role & Hak Akses
+        </span>
+      ),
+      children: <RolesTab />,
+    },
+    {
+      key: 'notifications',
+      label: (
+        <span>
+          <BellOutlined /> Notifikasi
+        </span>
+      ),
+      children: <NotificationSettingsTab />,
+    },
+    {
+      key: 'subscription',
+      label: (
+        <span>
+          <SettingOutlined /> Langganan
+        </span>
+      ),
+      children: <SubscriptionTab />,
+    },
+  ];
+
+  return (
+    <div>
+      <PageHeader
+        title="Pengaturan"
+        subtitle="Kelola pengaturan aplikasi"
+        breadcrumbs={[{ title: 'Dashboard', path: '/' }, { title: 'Pengaturan' }]}
+      />
       <Card>
         <Tabs items={tabItems} />
       </Card>
