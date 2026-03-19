@@ -1,167 +1,111 @@
-import React, { useEffect, useState } from 'react';
-import { Form, Input, Button, Card, Row, Col, Switch, message, Space, Typography } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Form, Input, Button, Card, Space, message, Spin, InputNumber, Row, Col } from 'antd';
+import { SaveOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import L from 'leaflet';
 import PageHeader from '@/components/shared/PageHeader';
 import { branchesService } from '@/services/branches.service';
 
-const { Text } = Typography;
-
-const defaultIcon = new L.Icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
-
-interface MapClickHandlerProps {
-  onLocationSelect: (lat: number, lng: number) => void;
-}
-
-const MapClickHandler: React.FC<MapClickHandlerProps> = ({ onLocationSelect }) => {
-  useMapEvents({
-    click(e) {
-      onLocationSelect(e.latlng.lat, e.latlng.lng);
-    },
-  });
-  return null;
-};
-
 const BranchFormPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { id } = useParams();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [position, setPosition] = useState<[number, number]>([-6.2088, 106.8456]);
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const isEdit = !!id;
+  const [saving, setSaving] = useState(false);
+  const isEdit = Boolean(id);
 
   useEffect(() => {
-    if (isEdit) loadBranch();
+    if (isEdit && id) fetchBranch(id);
   }, [id]);
 
-  const loadBranch = async () => {
+  const fetchBranch = async (branchId: string) => {
+    setLoading(true);
     try {
-      const { data } = await branchesService.getById(id!);
-      const branch = data.data;
-      form.setFieldsValue(branch);
-      if (branch.latitude && branch.longitude) {
-        setPosition([branch.latitude, branch.longitude]);
-      }
+      const { data } = await branchesService.getById(branchId);
+      form.setFieldsValue(data.data);
     } catch {
       message.error('Gagal memuat data cabang');
       navigate('/branches');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleLocationSelect = (lat: number, lng: number) => {
-    setPosition([lat, lng]);
-    form.setFieldsValue({ latitude: lat, longitude: lng });
-  };
-
-  const onFinish = async (values: Record<string, unknown>) => {
-    setLoading(true);
+  const onFinish = async (values: any) => {
+    setSaving(true);
     try {
-      if (isEdit) {
-        await branchesService.update(id!, values);
+      if (isEdit && id) {
+        await branchesService.update(id, values);
         message.success('Cabang berhasil diperbarui');
       } else {
         await branchesService.create(values);
         message.success('Cabang berhasil ditambahkan');
       }
       navigate('/branches');
-    } catch {
-      message.error('Gagal menyimpan data cabang');
+    } catch (error: any) {
+      message.error(error?.response?.data?.message || 'Gagal menyimpan data cabang');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
+  if (loading) return <div style={{ textAlign: 'center', padding: 50 }}><Spin size="large" /></div>;
+
   return (
     <div>
-      <PageHeader title={isEdit ? 'Edit Cabang' : 'Tambah Cabang'} subtitle="Kelola informasi lokasi cabang" />
-
-      <Form form={form} layout="vertical" onFinish={onFinish} initialValues={{ isActive: true }}>
-        <Row gutter={16}>
-          <Col xs={24} lg={12}>
-            <Card title="Informasi Cabang" style={{ marginBottom: 16 }}>
-              <Form.Item name="name" label="Nama Cabang" rules={[{ required: true, message: 'Wajib diisi' }]}>
-                <Input placeholder="Cabang Jakarta Pusat" />
+      <PageHeader
+        title={isEdit ? 'Edit Cabang' : 'Tambah Cabang'}
+        breadcrumbs={[{ title: 'Dashboard', path: '/' }, { title: 'Cabang', path: '/branches' }, { title: isEdit ? 'Edit' : 'Tambah' }]}
+      >
+        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/branches')}>Kembali</Button>
+      </PageHeader>
+      <Card>
+        <Form form={form} layout="vertical" onFinish={onFinish} style={{ maxWidth: 600 }}>
+          <Form.Item name="name" label="Nama Cabang" rules={[{ required: true, message: 'Masukkan nama cabang!' }]}>
+            <Input placeholder="Cabang Jakarta Pusat" />
+          </Form.Item>
+          <Form.Item name="address" label="Alamat" rules={[{ required: true, message: 'Masukkan alamat!' }]}>
+            <Input.TextArea rows={2} placeholder="Jl. Sudirman No. 1" />
+          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="city" label="Kota" rules={[{ required: true, message: 'Masukkan kota!' }]}>
+                <Input placeholder="Jakarta" />
               </Form.Item>
-              <Form.Item name="address" label="Alamat" rules={[{ required: true, message: 'Wajib diisi' }]}>
-                <Input.TextArea rows={2} placeholder="Alamat lengkap..." />
+            </Col>
+            <Col span={12}>
+              <Form.Item name="province" label="Provinsi" rules={[{ required: true, message: 'Masukkan provinsi!' }]}>
+                <Input placeholder="DKI Jakarta" />
               </Form.Item>
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item name="city" label="Kota" rules={[{ required: true, message: 'Wajib diisi' }]}>
-                    <Input placeholder="Jakarta" />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item name="province" label="Provinsi" rules={[{ required: true, message: 'Wajib diisi' }]}>
-                    <Input placeholder="DKI Jakarta" />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item name="phone" label="Telepon" rules={[{ required: true, message: 'Wajib diisi' }]}>
-                    <Input placeholder="021-12345678" />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item name="email" label="Email">
-                    <Input placeholder="cabang@rentalku.com" />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Form.Item name="isActive" label="Status Aktif" valuePropName="checked">
-                <Switch />
+            </Col>
+          </Row>
+          <Form.Item name="phone" label="Telepon" rules={[{ required: true, message: 'Masukkan telepon!' }]}>
+            <Input placeholder="021-1234567" />
+          </Form.Item>
+          <Form.Item name="email" label="Email">
+            <Input placeholder="cabang@rentalku.com" />
+          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="latitude" label="Latitude">
+                <InputNumber style={{ width: '100%' }} placeholder="-6.2088" step={0.0001} />
               </Form.Item>
-            </Card>
-          </Col>
-
-          <Col xs={24} lg={12}>
-            <Card title="Lokasi di Peta" style={{ marginBottom: 16 }}>
-              <Text type="secondary" style={{ marginBottom: 8, display: 'block' }}>
-                Klik pada peta untuk menandai lokasi cabang
-              </Text>
-              <div style={{ height: 300, marginBottom: 16, borderRadius: 8, overflow: 'hidden' }}>
-                <MapContainer center={position} zoom={13} style={{ height: '100%', width: '100%' }}>
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
-                  <Marker position={position} icon={defaultIcon} />
-                  <MapClickHandler onLocationSelect={handleLocationSelect} />
-                </MapContainer>
-              </div>
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item name="latitude" label="Latitude">
-                    <Input placeholder="-6.2088" readOnly />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item name="longitude" label="Longitude">
-                    <Input placeholder="106.8456" readOnly />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </Card>
-          </Col>
-        </Row>
-
-        <Space>
-          <Button type="primary" htmlType="submit" loading={loading}>
-            {isEdit ? 'Simpan Perubahan' : 'Tambah Cabang'}
-          </Button>
-          <Button onClick={() => navigate('/branches')}>Batal</Button>
-        </Space>
-      </Form>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="longitude" label="Longitude">
+                <InputNumber style={{ width: '100%' }} placeholder="106.8456" step={0.0001} />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item>
+            <Space>
+              <Button type="primary" htmlType="submit" icon={<SaveOutlined />} loading={saving}>
+                {isEdit ? 'Perbarui' : 'Simpan'}
+              </Button>
+              <Button onClick={() => navigate('/branches')}>Batal</Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Card>
     </div>
   );
 };

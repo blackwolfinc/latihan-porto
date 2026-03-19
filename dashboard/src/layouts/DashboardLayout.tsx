@@ -108,7 +108,7 @@ const DashboardLayout: React.FC = () => {
           borderBottom: '1px solid rgba(255,255,255,0.1)',
         }}>
           <Text strong style={{ color: '#fff', fontSize: collapsed ? 16 : 20 }}>
-            {collapsed ? 'RK' : 'RentalKu'}
+            {collapsed ? 'CH' : 'Caritahub Rental'}
           </Text>
         </div>
         <Menu

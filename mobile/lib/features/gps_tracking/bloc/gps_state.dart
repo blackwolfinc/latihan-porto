@@ -12,46 +12,37 @@ class GpsInitial extends GpsState {}
 
 class GpsLoading extends GpsState {}
 
-class GpsTracking extends GpsState {
+class TrackingActive extends GpsState {
   final double latitude;
   final double longitude;
-  final double? speed;
-  final double? heading;
-  final bool isSending;
-  final List<GpsLog> history;
+  final double speed;
+  final double heading;
+  final Duration duration;
+  final List<GpsLog> trackingHistory;
 
-  const GpsTracking({
+  const TrackingActive({
     required this.latitude,
     required this.longitude,
-    this.speed,
-    this.heading,
-    this.isSending = false,
-    this.history = const [],
+    this.speed = 0.0,
+    this.heading = 0.0,
+    this.duration = Duration.zero,
+    this.trackingHistory = const [],
   });
 
-  GpsTracking copyWith({
-    double? latitude,
-    double? longitude,
-    double? speed,
-    double? heading,
-    bool? isSending,
-    List<GpsLog>? history,
-  }) {
-    return GpsTracking(
-      latitude: latitude ?? this.latitude,
-      longitude: longitude ?? this.longitude,
-      speed: speed ?? this.speed,
-      heading: heading ?? this.heading,
-      isSending: isSending ?? this.isSending,
-      history: history ?? this.history,
-    );
-  }
-
   @override
-  List<Object?> get props => [latitude, longitude, speed, heading, isSending, history];
+  List<Object?> get props => [latitude, longitude, speed, heading, duration, trackingHistory];
 }
 
-class GpsStopped extends GpsState {}
+class TrackingInactive extends GpsState {}
+
+class TrackingHistoryLoaded extends GpsState {
+  final List<GpsLog> logs;
+
+  const TrackingHistoryLoaded({required this.logs});
+
+  @override
+  List<Object?> get props => [logs];
+}
 
 class GpsError extends GpsState {
   final String message;

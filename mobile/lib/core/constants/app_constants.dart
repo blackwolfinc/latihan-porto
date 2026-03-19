@@ -43,9 +43,9 @@ class AppConstants {
 class AppColors {
   AppColors._();
 
-  static const Color primary = Color(0xFF1565C0);
-  static const Color primaryLight = Color(0xFF42A5F5);
-  static const Color primaryDark = Color(0xFF0D47A1);
+  static const Color primary = Color(0xFF1A56DB);
+  static const Color primaryLight = Color(0xFF3B82F6);
+  static const Color primaryDark = Color(0xFF1E40AF);
   static const Color secondary = Color(0xFFFF8F00);
   static const Color background = Color(0xFFF5F5F5);
   static const Color surface = Colors.white;

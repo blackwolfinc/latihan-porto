@@ -7,6 +7,8 @@ async function main() {
   console.log('Seeding database...');
 
   // Clean existing data in correct order (respecting foreign keys)
+  await prisma.invoiceItem.deleteMany();
+  await prisma.invoice.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.gpsLog.deleteMany();
   await prisma.review.deleteMany();
@@ -23,8 +25,27 @@ async function main() {
   await prisma.car.deleteMany();
   await prisma.user.deleteMany();
   await prisma.branch.deleteMany();
+  await prisma.organization.deleteMany();
 
   const hashedPassword = await bcrypt.hash('password123', 10);
+
+  // ── Organization (Tenant) ───────────────────────────────────────
+  const organization = await prisma.organization.create({
+    data: {
+      name: 'Caritahub Rental',
+      slug: 'caritahub-rental',
+      address: 'Jl. Sudirman No. 1, Jakarta Pusat',
+      city: 'Jakarta',
+      phone: '021-5551234',
+      email: 'info@caritahub.com',
+      website: 'https://caritahub.com',
+      taxId: '01.234.567.8-012.000',
+      plan: 'PROFESSIONAL',
+      isActive: true,
+    },
+  });
+
+  console.log('Organization created');
 
   // ── Branches ──────────────────────────────────────────────────────
   const branchJakarta = await prisma.branch.create({
@@ -35,6 +56,7 @@ async function main() {
       phone: '021-5551234',
       lat: -6.2088,
       lng: 106.8456,
+      organizationId: organization.id,
     },
   });
 
@@ -46,6 +68,7 @@ async function main() {
       phone: '031-5321234',
       lat: -7.2575,
       lng: 112.7521,
+      organizationId: organization.id,
     },
   });
 
@@ -62,6 +85,7 @@ async function main() {
       phone: '081200000001',
       role: 'ADMIN',
       branchId: branchJakarta.id,
+      organizationId: organization.id,
     },
   });
 
@@ -74,6 +98,7 @@ async function main() {
       phone: '081200000002',
       role: 'MANAGER',
       branchId: branchJakarta.id,
+      organizationId: organization.id,
     },
   });
 
@@ -86,6 +111,7 @@ async function main() {
       phone: '081200000003',
       role: 'STAFF',
       branchId: branchJakarta.id,
+      organizationId: organization.id,
     },
   });
 
@@ -97,6 +123,7 @@ async function main() {
       phone: '081200000004',
       role: 'STAFF',
       branchId: branchSurabaya.id,
+      organizationId: organization.id,
     },
   });
 
@@ -108,6 +135,7 @@ async function main() {
       phone: '081200000005',
       role: 'STAFF',
       branchId: branchJakarta.id,
+      organizationId: organization.id,
     },
   });
 
@@ -120,6 +148,7 @@ async function main() {
       phone: '081200000006',
       role: 'DRIVER',
       branchId: branchJakarta.id,
+      organizationId: organization.id,
     },
   });
 
@@ -131,6 +160,7 @@ async function main() {
       phone: '081200000007',
       role: 'DRIVER',
       branchId: branchSurabaya.id,
+      organizationId: organization.id,
     },
   });
 
@@ -142,6 +172,7 @@ async function main() {
       phone: '081200000008',
       role: 'DRIVER',
       branchId: branchJakarta.id,
+      organizationId: organization.id,
     },
   });
 
@@ -153,6 +184,7 @@ async function main() {
       phone: '081200000009',
       role: 'DRIVER',
       branchId: branchSurabaya.id,
+      organizationId: organization.id,
     },
   });
 
@@ -164,6 +196,7 @@ async function main() {
       phone: '081200000010',
       role: 'DRIVER',
       branchId: branchJakarta.id,
+      organizationId: organization.id,
     },
   });
 
@@ -892,6 +925,101 @@ async function main() {
   });
 
   console.log('Expenses created');
+
+  // ── Invoices ────────────────────────────────────────────────────
+  // Invoice 1: Completed booking (booking1 - Toyota Avanza, 3 days, no driver)
+  const invoice1 = await prisma.invoice.create({
+    data: {
+      organizationId: organization.id,
+      bookingId: booking1.id,
+      invoiceNumber: 'INV-20240115-001',
+      issueDate: new Date('2024-01-15T08:00:00Z'),
+      dueDate: new Date('2024-01-29T08:00:00Z'),
+      subtotal: 1050000,
+      taxRate: 11,
+      taxAmount: 115500,
+      discount: 0,
+      totalAmount: 1165500,
+      status: 'PAID',
+      paidAt: new Date('2024-01-14T15:30:00Z'),
+      notes: 'Pembayaran lunas via bank transfer',
+      items: {
+        create: [
+          {
+            description: 'Sewa Mobil Toyota Avanza (B 1234 ABC)',
+            quantity: 3,
+            unitPrice: 350000,
+            amount: 1050000,
+          },
+        ],
+      },
+    },
+  });
+
+  // Invoice 2: Completed booking with driver (booking2 - Fortuner, 5 days, with driver)
+  const invoice2 = await prisma.invoice.create({
+    data: {
+      organizationId: organization.id,
+      bookingId: booking2.id,
+      invoiceNumber: 'INV-20240201-001',
+      issueDate: new Date('2024-02-01T07:00:00Z'),
+      dueDate: new Date('2024-02-15T07:00:00Z'),
+      subtotal: 5000000,
+      taxRate: 11,
+      taxAmount: 550000,
+      discount: 0,
+      totalAmount: 5550000,
+      status: 'PAID',
+      paidAt: new Date('2024-01-31T10:00:00Z'),
+      notes: 'Tour Jawa Timur dengan driver - dibayar via credit card',
+      items: {
+        create: [
+          {
+            description: 'Sewa Mobil Toyota Fortuner (L 9012 GHI)',
+            quantity: 5,
+            unitPrice: 800000,
+            amount: 4000000,
+          },
+          {
+            description: 'Biaya Driver - Joko Antar',
+            quantity: 5,
+            unitPrice: 200000,
+            amount: 1000000,
+          },
+        ],
+      },
+    },
+  });
+
+  // Invoice 3: Confirmed booking (booking3 - Honda City, 2 days, no driver) - SENT
+  const invoice3 = await prisma.invoice.create({
+    data: {
+      organizationId: organization.id,
+      bookingId: booking3.id,
+      invoiceNumber: 'INV-20240310-001',
+      issueDate: new Date('2024-03-10T08:00:00Z'),
+      dueDate: new Date('2024-03-24T08:00:00Z'),
+      subtotal: 800000,
+      taxRate: 11,
+      taxAmount: 88000,
+      discount: 0,
+      totalAmount: 888000,
+      status: 'SENT',
+      notes: 'Invoice dikirim ke email pelanggan',
+      items: {
+        create: [
+          {
+            description: 'Sewa Mobil Honda City (B 5678 DEF)',
+            quantity: 2,
+            unitPrice: 400000,
+            amount: 800000,
+          },
+        ],
+      },
+    },
+  });
+
+  console.log('Invoices created');
 
   console.log('\n========================================');
   console.log('Seeding completed successfully!');

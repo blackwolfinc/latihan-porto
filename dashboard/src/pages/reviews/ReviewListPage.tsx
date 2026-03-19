@@ -1,37 +1,29 @@
-import React, { useEffect, useState } from 'react';
-import { Table, Card, Space, Select, Rate, Typography, message } from 'antd';
-import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
+import React, { useState, useEffect } from 'react';
+import { Table, Button, Space, Select, Rate, Modal, message, Input, Tag } from 'antd';
+import { EyeOutlined, DeleteOutlined, CheckOutlined, StopOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import PageHeader from '@/components/shared/PageHeader';
-import { reviewsService, type ReviewFilters } from '@/services/reviews.service';
+import { reviewsService } from '@/services/reviews.service';
 import type { Review } from '@/types';
 
-const { Text } = Typography;
+const { Option } = Select;
+const { TextArea } = Input;
 
 const ReviewListPage: React.FC = () => {
+  const navigate = useNavigate();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(false);
-  const [pagination, setPagination] = useState<TablePaginationConfig>({
-    current: 1,
-    pageSize: 10,
-    total: 0,
-  });
-  const [filters, setFilters] = useState<ReviewFilters>({});
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [ratingFilter, setRatingFilter] = useState<number | undefined>();
 
-  useEffect(() => {
-    loadReviews();
-  }, [pagination.current, filters]);
-
-  const loadReviews = async () => {
+  const fetchReviews = async () => {
     setLoading(true);
     try {
-      const { data } = await reviewsService.getAll({
-        page: pagination.current,
-        limit: pagination.pageSize,
-        ...filters,
-      });
+      const { data } = await reviewsService.getAll({ page, limit: 10, minRating: ratingFilter });
       setReviews(data.data);
-      setPagination((prev) => ({ ...prev, total: data.meta.total }));
+      setTotal(data.meta.total);
     } catch {
       message.error('Gagal memuat data review');
     } finally {
@@ -39,85 +31,75 @@ const ReviewListPage: React.FC = () => {
     }
   };
 
-  const columns: ColumnsType<Review> = [
+  useEffect(() => { fetchReviews(); }, [page, ratingFilter]);
+
+  const handleTogglePublish = async (id: string) => {
+    try {
+      await reviewsService.togglePublish(id);
+      message.success('Status publikasi berhasil diubah');
+      fetchReviews();
+    } catch {
+      message.error('Gagal mengubah status');
+    }
+  };
+
+  const handleDelete = (id: string) => {
+    Modal.confirm({
+      title: 'Hapus Review', content: 'Hapus review ini?', okText: 'Hapus', okType: 'danger', cancelText: 'Batal',
+      onOk: async () => {
+        try { await reviewsService.delete(id); message.success('Berhasil dihapus'); fetchReviews(); }
+        catch { message.error('Gagal menghapus'); }
+      },
+    });
+  };
+
+  const columns = [
+    { title: 'Customer', key: 'customer', render: (_: any, r: Review) => r.customer?.name || '-' },
+    { title: 'Mobil', key: 'car', render: (_: any, r: Review) => r.car ? `${r.car.brand} ${r.car.model}` : '-' },
+    { title: 'Driver', key: 'driver', render: (_: any, r: Review) => r.driver?.user?.name || '-' },
     {
-      title: 'Customer',
-      key: 'customer',
-      render: (_, record) => record.customer?.name || '-',
-    },
-    {
-      title: 'Mobil',
-      key: 'car',
-      render: (_, record) =>
-        record.car ? `${record.car.brand} ${record.car.model}` : '-',
-    },
-    {
-      title: 'Driver',
-      key: 'driver',
-      render: (_, record) => record.driver?.user?.name || '-',
-    },
-    {
-      title: 'Rating',
-      dataIndex: 'rating',
-      key: 'rating',
-      width: 180,
+      title: 'Rating', dataIndex: 'rating', key: 'rating',
       render: (rating: number) => <Rate disabled value={rating} allowHalf style={{ fontSize: 14 }} />,
-      sorter: true,
+    },
+    { title: 'Komentar', dataIndex: 'comment', key: 'comment', ellipsis: true, width: 200 },
+    { title: 'Tanggal', dataIndex: 'createdAt', key: 'createdAt', render: (d: string) => dayjs(d).format('DD/MM/YYYY') },
+    {
+      title: 'Publikasi', dataIndex: 'isPublished', key: 'isPublished',
+      render: (v: boolean) => v ? <Tag color="green">Dipublikasi</Tag> : <Tag color="default">Draft</Tag>,
     },
     {
-      title: 'Komentar',
-      dataIndex: 'comment',
-      key: 'comment',
-      ellipsis: true,
-      render: (comment: string) => (
-        <Text style={{ maxWidth: 300 }} ellipsis={{ tooltip: comment }}>
-          {comment || '-'}
-        </Text>
+      title: 'Aksi', key: 'action', width: 140,
+      render: (_: any, r: Review) => (
+        <Space>
+          <Button
+            type="link"
+            icon={r.isPublished ? <StopOutlined /> : <CheckOutlined />}
+            onClick={() => handleTogglePublish(r.id)}
+          />
+          <Button type="link" danger icon={<DeleteOutlined />} onClick={() => handleDelete(r.id)} />
+        </Space>
       ),
-    },
-    {
-      title: 'Tanggal',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      render: (d: string) => dayjs(d).format('DD MMM YYYY'),
-      sorter: true,
     },
   ];
 
   return (
     <div>
-      <PageHeader title="Daftar Review" subtitle="Ulasan pelanggan terhadap layanan rental" />
-      <Card>
-        <Space style={{ marginBottom: 16 }} wrap>
-          <Select
-            placeholder="Filter Rating"
-            allowClear
-            style={{ width: 180 }}
-            onChange={(v) => setFilters((p) => ({ ...p, minRating: v }))}
-            options={[
-              { label: '5 Bintang', value: 5 },
-              { label: '4 Bintang ke atas', value: 4 },
-              { label: '3 Bintang ke atas', value: 3 },
-              { label: '2 Bintang ke atas', value: 2 },
-              { label: '1 Bintang ke atas', value: 1 },
-            ]}
-          />
-        </Space>
-        <Table
-          columns={columns}
-          dataSource={reviews}
-          rowKey="id"
-          loading={loading}
-          pagination={{
-            ...pagination,
-            showSizeChanger: true,
-            showTotal: (total) => `Total ${total} review`,
-          }}
-          onChange={(pag) => setPagination(pag)}
-          scroll={{ x: 800 }}
-          locale={{ emptyText: 'Belum ada review' }}
-        />
-      </Card>
+      <PageHeader
+        title="Daftar Review"
+        subtitle={`Total ${total} review`}
+        breadcrumbs={[{ title: 'Dashboard', path: '/' }, { title: 'Review' }]}
+      />
+      <Space style={{ marginBottom: 16 }}>
+        <Select placeholder="Rating minimum" allowClear style={{ width: 180 }} onChange={(v) => { setRatingFilter(v); setPage(1); }}>
+          <Option value={5}>5 Bintang</Option>
+          <Option value={4}>4+ Bintang</Option>
+          <Option value={3}>3+ Bintang</Option>
+          <Option value={2}>2+ Bintang</Option>
+          <Option value={1}>1+ Bintang</Option>
+        </Select>
+      </Space>
+      <Table columns={columns} dataSource={reviews} rowKey="id" loading={loading} scroll={{ x: 1000 }}
+        pagination={{ current: page, total, pageSize: 10, onChange: setPage, showTotal: (t) => `Total ${t} data` }} />
     </div>
   );
 };

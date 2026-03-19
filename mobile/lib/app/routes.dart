@@ -18,6 +18,8 @@ import '../features/gps_tracking/pages/live_tracking_page.dart';
 import '../features/inspections/pages/inspection_form_page.dart';
 import '../features/reviews/pages/review_form_page.dart';
 import '../features/contracts/pages/contract_view_page.dart';
+import '../features/invoices/pages/invoice_list_page.dart';
+import '../features/invoices/pages/invoice_detail_page.dart';
 import '../features/notifications/pages/notification_list_page.dart';
 import '../features/profile/pages/profile_page.dart';
 import '../features/profile/pages/edit_profile_page.dart';
@@ -153,6 +155,18 @@ final GoRouter appRouter = GoRouter(
       name: 'contract',
       builder: (context, state) => ContractViewPage(
         bookingId: state.pathParameters['bookingId']!,
+      ),
+    ),
+    GoRoute(
+      path: '/invoices',
+      name: 'invoices',
+      builder: (context, state) => const InvoiceListPage(),
+    ),
+    GoRoute(
+      path: '/invoices/:id',
+      name: 'invoiceDetail',
+      builder: (context, state) => InvoiceDetailPage(
+        invoiceId: state.pathParameters['id']!,
       ),
     ),
     GoRoute(

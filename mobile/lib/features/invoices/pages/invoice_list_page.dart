@@ -182,9 +182,9 @@ class _InvoiceListPageState extends State<InvoiceListPage>
         bottom: TabBar(
           controller: _tabController,
           onChanged: (_) => setState(() {}),
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white60,
-          indicatorColor: Colors.white,
+          labelColor: AppColors.primary,
+          unselectedLabelColor: AppColors.textSecondary,
+          indicatorColor: AppColors.primary,
           indicatorWeight: 3,
           tabs: const [
             Tab(text: 'Semua'),
