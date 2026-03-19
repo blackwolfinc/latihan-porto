@@ -72,6 +72,8 @@ class Driver extends Equatable {
     };
   }
 
+  String get displayName => user?.name ?? 'Driver #${id.substring(0, 8)}';
+
   @override
   List<Object?> get props => [id, userId, licenseNumber];
 }

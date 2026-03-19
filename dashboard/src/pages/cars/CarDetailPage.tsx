@@ -1,43 +1,26 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Card,
-  Descriptions,
-  Tabs,
-  Table,
-  Tag,
-  Image,
-  Row,
-  Col,
-  Button,
-  Space,
-  message,
-  Typography,
-} from 'antd';
-import { EditOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Card, Tabs, Descriptions, Table, Tag, Image, Row, Col, Button, Space, Spin, Empty, message } from 'antd';
+import { ArrowLeftOutlined, EditOutlined } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import PageHeader from '@/components/shared/PageHeader';
 import StatusTag from '@/components/ui/StatusTag';
 import { carsService } from '@/services/cars.service';
-import type { Car, Booking, MaintenanceRecord, CarDocument } from '@/types';
-import type { ColumnsType } from 'antd/es/table';
-
-const { Text } = Typography;
+import type { Car, CarDocument, Booking, MaintenanceRecord } from '@/types';
 
 const CarDetailPage: React.FC = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [car, setCar] = useState<Car | null>(null);
   const [loading, setLoading] = useState(true);
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
 
   useEffect(() => {
-    loadCar();
+    if (id) fetchCar(id);
   }, [id]);
 
-  const loadCar = async () => {
-    setLoading(true);
+  const fetchCar = async (carId: string) => {
     try {
-      const { data } = await carsService.getById(id!);
+      const { data } = await carsService.getById(carId);
       setCar(data.data);
     } catch {
       message.error('Gagal memuat data mobil');
@@ -47,78 +30,86 @@ const CarDetailPage: React.FC = () => {
     }
   };
 
-  const documentColumns: ColumnsType<CarDocument> = [
-    { title: 'Tipe', dataIndex: 'type', key: 'type', render: (t) => <Tag>{t}</Tag> },
+  if (loading) {
+    return <div style={{ textAlign: 'center', padding: 50 }}><Spin size="large" /></div>;
+  }
+
+  if (!car) {
+    return <Empty description="Mobil tidak ditemukan" />;
+  }
+
+  const documentColumns = [
+    { title: 'Tipe', dataIndex: 'type', key: 'type' },
     { title: 'Nomor Dokumen', dataIndex: 'documentNumber', key: 'documentNumber' },
     {
-      title: 'Kadaluarsa',
+      title: 'Tanggal Kadaluarsa',
       dataIndex: 'expiryDate',
       key: 'expiryDate',
-      render: (date) => (date ? dayjs(date).format('DD MMM YYYY') : '-'),
+      render: (date: string) => date ? dayjs(date).format('DD/MM/YYYY') : '-',
     },
     {
       title: 'File',
       dataIndex: 'fileUrl',
       key: 'fileUrl',
-      render: (url) => url ? <a href={url} target="_blank" rel="noopener noreferrer">Lihat</a> : '-',
+      render: (url: string) => url ? <a href={url} target="_blank" rel="noopener noreferrer">Lihat</a> : '-',
     },
   ];
 
-  const bookingColumns: ColumnsType<Booking> = [
-    { title: 'No. Booking', dataIndex: 'bookingNumber', key: 'bookingNumber' },
-    { title: 'Customer', dataIndex: ['customer', 'name'], key: 'customer' },
+  const bookingColumns = [
+    { title: 'ID', dataIndex: 'bookingNumber', key: 'bookingNumber' },
     {
-      title: 'Tanggal Mulai',
-      dataIndex: 'startDate',
-      key: 'startDate',
-      render: (d) => dayjs(d).format('DD MMM YYYY'),
+      title: 'Customer',
+      key: 'customer',
+      render: (_: any, record: any) => record.customer?.name || '-',
     },
     {
-      title: 'Tanggal Selesai',
+      title: 'Mulai',
+      dataIndex: 'startDate',
+      key: 'startDate',
+      render: (date: string) => dayjs(date).format('DD/MM/YYYY'),
+    },
+    {
+      title: 'Selesai',
       dataIndex: 'endDate',
       key: 'endDate',
-      render: (d) => dayjs(d).format('DD MMM YYYY'),
+      render: (date: string) => dayjs(date).format('DD/MM/YYYY'),
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (s) => <StatusTag type="booking" status={s} />,
+      render: (status: string) => <StatusTag status={status} type="booking" />,
     },
     {
       title: 'Total',
       dataIndex: 'totalAmount',
       key: 'totalAmount',
-      render: (a) => `Rp ${(a || 0).toLocaleString('id-ID')}`,
+      render: (amount: number) => `Rp ${amount?.toLocaleString('id-ID')}`,
     },
   ];
 
-  const maintenanceColumns: ColumnsType<MaintenanceRecord> = [
-    { title: 'Tipe', dataIndex: 'type', key: 'type', render: (t) => <Tag>{t}</Tag> },
+  const maintenanceColumns = [
+    { title: 'Tipe', dataIndex: 'type', key: 'type' },
     { title: 'Deskripsi', dataIndex: 'description', key: 'description' },
     {
       title: 'Tanggal',
       dataIndex: 'scheduledDate',
       key: 'scheduledDate',
-      render: (d) => dayjs(d).format('DD MMM YYYY'),
+      render: (date: string) => dayjs(date).format('DD/MM/YYYY'),
     },
     {
       title: 'Biaya',
       dataIndex: 'cost',
       key: 'cost',
-      render: (c) => `Rp ${(c || 0).toLocaleString('id-ID')}`,
+      render: (cost: number) => `Rp ${cost?.toLocaleString('id-ID')}`,
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (s) => <StatusTag type="maintenance" status={s} />,
+      render: (status: string) => <StatusTag status={status} type="maintenance" />,
     },
   ];
-
-  if (loading || !car) {
-    return <Card loading={true} />;
-  }
 
   const tabItems = [
     {
@@ -126,42 +117,46 @@ const CarDetailPage: React.FC = () => {
       label: 'Informasi',
       children: (
         <Row gutter={[24, 24]}>
-          <Col xs={24} md={8}>
+          <Col xs={24} md={10}>
             <Image
-              src={car.imageUrl || 'https://via.placeholder.com/400x300?text=No+Image'}
-              style={{ borderRadius: 8, width: '100%' }}
+              src={car.imageUrl || '/placeholder-car.png'}
+              alt={`${car.brand} ${car.model}`}
+              style={{ width: '100%', borderRadius: 8, objectFit: 'cover' }}
+              fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN88P/BfwAJhAPkC1TroQAAAABJRU5ErkJggg=="
             />
+            {car.images && car.images.length > 0 && (
+              <Image.PreviewGroup>
+                <Row gutter={8} style={{ marginTop: 8 }}>
+                  {car.images.map((img, idx) => (
+                    <Col key={idx} span={6}>
+                      <Image src={img} style={{ width: '100%', height: 60, objectFit: 'cover', borderRadius: 4 }} />
+                    </Col>
+                  ))}
+                </Row>
+              </Image.PreviewGroup>
+            )}
           </Col>
-          <Col xs={24} md={16}>
-            <Descriptions bordered column={{ xs: 1, md: 2 }}>
-              <Descriptions.Item label="Plat Nomor"><Text strong>{car.plateNumber}</Text></Descriptions.Item>
-              <Descriptions.Item label="Merk & Model">{car.brand} {car.model}</Descriptions.Item>
+          <Col xs={24} md={14}>
+            <Descriptions bordered column={{ xs: 1, md: 2 }} size="small">
+              <Descriptions.Item label="Brand">{car.brand}</Descriptions.Item>
+              <Descriptions.Item label="Model">{car.model}</Descriptions.Item>
               <Descriptions.Item label="Tahun">{car.year}</Descriptions.Item>
+              <Descriptions.Item label="Plat Nomor">{car.plateNumber}</Descriptions.Item>
               <Descriptions.Item label="Warna">{car.color}</Descriptions.Item>
-              <Descriptions.Item label="Kategori"><Tag color="blue">{car.category}</Tag></Descriptions.Item>
+              <Descriptions.Item label="Kategori">{car.category}</Descriptions.Item>
               <Descriptions.Item label="Transmisi">{car.transmission}</Descriptions.Item>
-              <Descriptions.Item label="Bahan Bakar">{car.fuelType}</Descriptions.Item>
+              <Descriptions.Item label="BBM">{car.fuelType}</Descriptions.Item>
               <Descriptions.Item label="Kapasitas Mesin">{car.engineCapacity} cc</Descriptions.Item>
-              <Descriptions.Item label="Jumlah Kursi">{car.seats}</Descriptions.Item>
-              <Descriptions.Item label="Kilometer">{(car.mileage || 0).toLocaleString('id-ID')} km</Descriptions.Item>
-              <Descriptions.Item label="Harga/Hari">Rp {(car.pricePerDay || 0).toLocaleString('id-ID')}</Descriptions.Item>
-              <Descriptions.Item label="Harga/Jam">{car.pricePerHour ? `Rp ${car.pricePerHour.toLocaleString('id-ID')}` : '-'}</Descriptions.Item>
-              <Descriptions.Item label="Status"><StatusTag type="car" status={car.status} /></Descriptions.Item>
+              <Descriptions.Item label="Kursi">{car.seats}</Descriptions.Item>
+              <Descriptions.Item label="Kilometer">{car.mileage?.toLocaleString('id-ID')} km</Descriptions.Item>
+              <Descriptions.Item label="Tarif/Hari">Rp {car.pricePerDay?.toLocaleString('id-ID')}</Descriptions.Item>
+              <Descriptions.Item label="Status"><StatusTag status={car.status} type="car" /></Descriptions.Item>
               <Descriptions.Item label="Cabang">{car.branch?.name || '-'}</Descriptions.Item>
             </Descriptions>
-            {car.features && car.features.length > 0 && (
-              <div style={{ marginTop: 16 }}>
-                <Text strong>Fitur:</Text>
-                <div style={{ marginTop: 8 }}>
-                  {car.features.map((f, i) => <Tag key={i}>{f}</Tag>)}
-                </div>
-              </div>
-            )}
             {car.description && (
-              <div style={{ marginTop: 16 }}>
-                <Text strong>Deskripsi:</Text>
-                <p>{car.description}</p>
-              </div>
+              <Card size="small" title="Deskripsi" style={{ marginTop: 16 }}>
+                {car.description}
+              </Card>
             )}
           </Col>
         </Row>
@@ -172,11 +167,11 @@ const CarDetailPage: React.FC = () => {
       label: 'Dokumen',
       children: (
         <Table
-          dataSource={car.documents || []}
           columns={documentColumns}
+          dataSource={car.documents || []}
           rowKey="id"
           pagination={false}
-          locale={{ emptyText: 'Belum ada dokumen' }}
+          locale={{ emptyText: <Empty description="Belum ada dokumen" /> }}
         />
       ),
     },
@@ -185,22 +180,22 @@ const CarDetailPage: React.FC = () => {
       label: 'Riwayat Booking',
       children: (
         <Table
-          dataSource={[]}
           columns={bookingColumns}
+          dataSource={[]}
           rowKey="id"
-          locale={{ emptyText: 'Belum ada riwayat booking' }}
+          locale={{ emptyText: <Empty description="Belum ada riwayat booking" /> }}
         />
       ),
     },
     {
       key: 'maintenance',
-      label: 'Riwayat Maintenance',
+      label: 'Maintenance',
       children: (
         <Table
-          dataSource={[]}
           columns={maintenanceColumns}
+          dataSource={[]}
           rowKey="id"
-          locale={{ emptyText: 'Belum ada riwayat maintenance' }}
+          locale={{ emptyText: <Empty description="Belum ada riwayat maintenance" /> }}
         />
       ),
     },
@@ -209,16 +204,20 @@ const CarDetailPage: React.FC = () => {
   return (
     <div>
       <PageHeader
-        title={`${car.brand} ${car.model} - ${car.plateNumber}`}
-        showBack
-        extra={
-          <Space>
-            <Button type="primary" icon={<EditOutlined />} onClick={() => navigate(`/cars/${car.id}/edit`)}>
-              Edit
-            </Button>
-          </Space>
-        }
-      />
+        title={`${car.brand} ${car.model} (${car.plateNumber})`}
+        subtitle={`Tahun ${car.year} - ${car.color}`}
+        breadcrumbs={[
+          { title: 'Dashboard', path: '/' },
+          { title: 'Mobil', path: '/cars' },
+          { title: `${car.brand} ${car.model}` },
+        ]}
+      >
+        <Space>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/cars')}>Kembali</Button>
+          <Button type="primary" icon={<EditOutlined />} onClick={() => navigate(`/cars/${car.id}/edit`)}>Edit</Button>
+        </Space>
+      </PageHeader>
+
       <Card>
         <Tabs items={tabItems} />
       </Card>

@@ -44,6 +44,18 @@ class Car extends Equatable {
   });
 
   String get fullName => '$brand $model';
+  String get name => '$brand $model';
+  int get seats => seatCapacity;
+
+  String get formattedPricePerDay {
+    final parts = pricePerDay.toStringAsFixed(0).split('');
+    final buffer = StringBuffer();
+    for (int i = 0; i < parts.length; i++) {
+      if (i > 0 && (parts.length - i) % 3 == 0) buffer.write('.');
+      buffer.write(parts[i]);
+    }
+    return 'Rp $buffer/hari';
+  }
 
   factory Car.fromJson(Map<String, dynamic> json) {
     return Car(

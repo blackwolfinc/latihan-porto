@@ -47,6 +47,17 @@ class Booking extends Equatable {
   });
 
   int get totalDays => endDate.difference(startDate).inDays;
+  int get durationInDays => totalDays > 0 ? totalDays : 1;
+
+  String get formattedTotalPrice {
+    final parts = totalAmount.toStringAsFixed(0).split('');
+    final buffer = StringBuffer();
+    for (int i = 0; i < parts.length; i++) {
+      if (i > 0 && (parts.length - i) % 3 == 0) buffer.write('.');
+      buffer.write(parts[i]);
+    }
+    return 'Rp $buffer';
+  }
 
   factory Booking.fromJson(Map<String, dynamic> json) {
     return Booking(

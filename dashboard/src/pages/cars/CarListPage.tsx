@@ -1,35 +1,36 @@
-import React, { useEffect, useState } from 'react';
-import { Table, Card, Button, Space, Input, Select, Tag, Image, Popconfirm, message } from 'antd';
-import { PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Table, Button, Space, Input, Select, Image, Modal, message, Spin } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, SearchOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import PageHeader from '@/components/shared/PageHeader';
 import StatusTag from '@/components/ui/StatusTag';
-import { carsService, type CarFilters } from '@/services/cars.service';
-import type { Car } from '@/types';
-import { CarStatus, CarCategory } from '@/types';
+import { carsService } from '@/services/cars.service';
+import type { Car, CarStatus, CarCategory } from '@/types';
+
+const { Option } = Select;
 
 const CarListPage: React.FC = () => {
+  const navigate = useNavigate();
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(false);
-  const [pagination, setPagination] = useState<TablePaginationConfig>({ current: 1, pageSize: 10, total: 0 });
-  const [filters, setFilters] = useState<CarFilters>({});
-  const navigate = useNavigate();
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<CarStatus | undefined>();
+  const [categoryFilter, setCategoryFilter] = useState<CarCategory | undefined>();
 
-  useEffect(() => {
-    loadCars();
-  }, [pagination.current, pagination.pageSize, filters]);
-
-  const loadCars = async () => {
+  const fetchCars = async () => {
     setLoading(true);
     try {
       const { data } = await carsService.getAll({
-        page: pagination.current,
-        limit: pagination.pageSize,
-        ...filters,
+        page,
+        limit: 10,
+        search: search || undefined,
+        status: statusFilter,
+        category: categoryFilter,
       });
       setCars(data.data);
-      setPagination((prev) => ({ ...prev, total: data.meta.total }));
+      setTotal(data.meta.total);
     } catch {
       message.error('Gagal memuat data mobil');
     } finally {
@@ -37,29 +38,43 @@ const CarListPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      await carsService.delete(id);
-      message.success('Mobil berhasil dihapus');
-      loadCars();
-    } catch {
-      message.error('Gagal menghapus mobil');
-    }
+  useEffect(() => {
+    fetchCars();
+  }, [page, search, statusFilter, categoryFilter]);
+
+  const handleDelete = (id: string) => {
+    Modal.confirm({
+      title: 'Hapus Mobil',
+      content: 'Apakah Anda yakin ingin menghapus mobil ini?',
+      okText: 'Hapus',
+      okType: 'danger',
+      cancelText: 'Batal',
+      onOk: async () => {
+        try {
+          await carsService.delete(id);
+          message.success('Mobil berhasil dihapus');
+          fetchCars();
+        } catch {
+          message.error('Gagal menghapus mobil');
+        }
+      },
+    });
   };
 
-  const columns: ColumnsType<Car> = [
+  const columns = [
     {
       title: 'Foto',
       dataIndex: 'imageUrl',
-      key: 'image',
+      key: 'imageUrl',
       width: 80,
-      render: (url) => (
+      render: (url: string) => (
         <Image
-          src={url || 'https://via.placeholder.com/60x40?text=No+Image'}
+          src={url || '/placeholder-car.png'}
+          alt="car"
           width={60}
           height={40}
           style={{ objectFit: 'cover', borderRadius: 4 }}
-          preview={false}
+          fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN88P/BfwAJhAPkC1TroQAAAABJRU5ErkJggg=="
         />
       ),
     },
@@ -67,54 +82,44 @@ const CarListPage: React.FC = () => {
       title: 'Plat Nomor',
       dataIndex: 'plateNumber',
       key: 'plateNumber',
-      sorter: true,
-      render: (text) => <strong>{text}</strong>,
+      width: 120,
     },
     {
-      title: 'Mobil',
-      key: 'car',
-      render: (_, record) => `${record.brand} ${record.model} (${record.year})`,
+      title: 'Brand/Model',
+      key: 'brandModel',
+      render: (_: any, record: Car) => `${record.brand} ${record.model}`,
     },
     {
       title: 'Kategori',
       dataIndex: 'category',
       key: 'category',
-      render: (cat) => <Tag color="blue">{cat}</Tag>,
-    },
-    {
-      title: 'Transmisi',
-      dataIndex: 'transmission',
-      key: 'transmission',
-    },
-    {
-      title: 'Harga/Hari',
-      dataIndex: 'pricePerDay',
-      key: 'pricePerDay',
-      sorter: true,
-      render: (price) => `Rp ${(price || 0).toLocaleString('id-ID')}`,
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (status) => <StatusTag type="car" status={status} />,
+      render: (status: string) => <StatusTag status={status} type="car" />,
+    },
+    {
+      title: 'Tarif/Hari',
+      dataIndex: 'pricePerDay',
+      key: 'pricePerDay',
+      render: (price: number) => `Rp ${price?.toLocaleString('id-ID')}`,
     },
     {
       title: 'Cabang',
-      dataIndex: ['branch', 'name'],
       key: 'branch',
+      render: (_: any, record: Car) => record.branch?.name || '-',
     },
     {
       title: 'Aksi',
       key: 'action',
       width: 150,
-      render: (_, record) => (
+      render: (_: any, record: Car) => (
         <Space>
           <Button type="link" icon={<EyeOutlined />} onClick={() => navigate(`/cars/${record.id}`)} />
           <Button type="link" icon={<EditOutlined />} onClick={() => navigate(`/cars/${record.id}/edit`)} />
-          <Popconfirm title="Hapus mobil ini?" onConfirm={() => handleDelete(record.id)}>
-            <Button type="link" danger icon={<DeleteOutlined />} />
-          </Popconfirm>
+          <Button type="link" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record.id)} />
         </Space>
       ),
     },
@@ -124,51 +129,65 @@ const CarListPage: React.FC = () => {
     <div>
       <PageHeader
         title="Daftar Mobil"
-        subtitle="Kelola semua armada kendaraan"
-        extra={
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/cars/new')}>
-            Tambah Mobil
-          </Button>
-        }
-      />
-      <Card>
-        <Space style={{ marginBottom: 16 }} wrap>
-          <Input
-            placeholder="Cari plat/merk/model..."
-            prefix={<SearchOutlined />}
-            style={{ width: 250 }}
-            onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
-            allowClear
-          />
-          <Select
-            placeholder="Status"
-            allowClear
-            style={{ width: 150 }}
-            onChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}
-            options={Object.values(CarStatus).map((s) => ({ label: s, value: s }))}
-          />
-          <Select
-            placeholder="Kategori"
-            allowClear
-            style={{ width: 150 }}
-            onChange={(value) => setFilters((prev) => ({ ...prev, category: value }))}
-            options={Object.values(CarCategory).map((c) => ({ label: c, value: c }))}
-          />
-        </Space>
-        <Table
-          columns={columns}
-          dataSource={cars}
-          rowKey="id"
-          loading={loading}
-          pagination={{
-            ...pagination,
-            showSizeChanger: true,
-            showTotal: (total) => `Total ${total} mobil`,
-          }}
-          onChange={(pag) => setPagination(pag)}
-          scroll={{ x: 1000 }}
+        subtitle={`Total ${total} mobil`}
+        breadcrumbs={[{ title: 'Dashboard', path: '/' }, { title: 'Mobil' }]}
+      >
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/cars/create')}>
+          Tambah Mobil
+        </Button>
+      </PageHeader>
+
+      <Space style={{ marginBottom: 16, flexWrap: 'wrap' }} size={12}>
+        <Input
+          placeholder="Cari mobil..."
+          prefix={<SearchOutlined />}
+          allowClear
+          style={{ width: 220 }}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
         />
-      </Card>
+        <Select
+          placeholder="Kategori"
+          allowClear
+          style={{ width: 150 }}
+          onChange={(val) => { setCategoryFilter(val); setPage(1); }}
+        >
+          <Option value="SEDAN">Sedan</Option>
+          <Option value="SUV">SUV</Option>
+          <Option value="MPV">MPV</Option>
+          <Option value="HATCHBACK">Hatchback</Option>
+          <Option value="PICKUP">Pickup</Option>
+          <Option value="VAN">Van</Option>
+          <Option value="LUXURY">Luxury</Option>
+          <Option value="SPORT">Sport</Option>
+        </Select>
+        <Select
+          placeholder="Status"
+          allowClear
+          style={{ width: 150 }}
+          onChange={(val) => { setStatusFilter(val); setPage(1); }}
+        >
+          <Option value="AVAILABLE">Tersedia</Option>
+          <Option value="RENTED">Disewa</Option>
+          <Option value="MAINTENANCE">Perawatan</Option>
+          <Option value="INACTIVE">Nonaktif</Option>
+        </Select>
+      </Space>
+
+      <Table
+        columns={columns}
+        dataSource={cars}
+        rowKey="id"
+        loading={loading}
+        scroll={{ x: 1000 }}
+        pagination={{
+          current: page,
+          total,
+          pageSize: 10,
+          onChange: setPage,
+          showSizeChanger: false,
+          showTotal: (total) => `Total ${total} data`,
+        }}
+      />
     </div>
   );
 };

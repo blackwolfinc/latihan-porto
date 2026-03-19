@@ -1,38 +1,39 @@
-import React, { useEffect, useState } from 'react';
-import { Table, Card, Button, Space, Input, Select, DatePicker, message } from 'antd';
-import { PlusOutlined, SearchOutlined, EyeOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Table, Button, Space, Input, Select, DatePicker, message, Modal } from 'antd';
+import { PlusOutlined, EyeOutlined, SearchOutlined, CalendarOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import dayjs from 'dayjs';
 import PageHeader from '@/components/shared/PageHeader';
 import StatusTag from '@/components/ui/StatusTag';
-import { bookingsService, type BookingFilters } from '@/services/bookings.service';
-import type { Booking } from '@/types';
-import { BookingStatus } from '@/types';
+import { bookingsService } from '@/services/bookings.service';
+import type { Booking, BookingStatus } from '@/types';
 
 const { RangePicker } = DatePicker;
+const { Option } = Select;
 
 const BookingListPage: React.FC = () => {
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
-  const [pagination, setPagination] = useState<TablePaginationConfig>({ current: 1, pageSize: 10, total: 0 });
-  const [filters, setFilters] = useState<BookingFilters>({});
-  const navigate = useNavigate();
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<BookingStatus | undefined>();
+  const [dateRange, setDateRange] = useState<[string, string] | undefined>();
 
-  useEffect(() => {
-    loadBookings();
-  }, [pagination.current, pagination.pageSize, filters]);
-
-  const loadBookings = async () => {
+  const fetchBookings = async () => {
     setLoading(true);
     try {
       const { data } = await bookingsService.getAll({
-        page: pagination.current,
-        limit: pagination.pageSize,
-        ...filters,
+        page,
+        limit: 10,
+        search: search || undefined,
+        status: statusFilter,
+        startDate: dateRange?.[0],
+        endDate: dateRange?.[1],
       });
       setBookings(data.data);
-      setPagination((prev) => ({ ...prev, total: data.meta.total }));
+      setTotal(data.meta.total);
     } catch {
       message.error('Gagal memuat data booking');
     } finally {
@@ -40,61 +41,56 @@ const BookingListPage: React.FC = () => {
     }
   };
 
-  const columns: ColumnsType<Booking> = [
-    {
-      title: 'No. Booking',
-      dataIndex: 'bookingNumber',
-      key: 'bookingNumber',
-      render: (text) => <strong>{text}</strong>,
-    },
+  useEffect(() => {
+    fetchBookings();
+  }, [page, search, statusFilter, dateRange]);
+
+  const columns = [
+    { title: 'ID', dataIndex: 'bookingNumber', key: 'bookingNumber', width: 130 },
     {
       title: 'Customer',
-      dataIndex: ['customer', 'name'],
       key: 'customer',
+      render: (_: any, record: Booking) => record.customer?.name || '-',
     },
     {
       title: 'Mobil',
       key: 'car',
-      render: (_, record) =>
-        record.car ? `${record.car.brand} ${record.car.model} (${record.car.plateNumber})` : '-',
+      render: (_: any, record: Booking) => record.car ? `${record.car.brand} ${record.car.model}` : '-',
     },
     {
       title: 'Driver',
-      dataIndex: ['driver', 'user', 'name'],
       key: 'driver',
-      render: (text) => text || '-',
+      render: (_: any, record: Booking) => record.driver?.user?.name || 'Tanpa Driver',
     },
     {
-      title: 'Tanggal Mulai',
+      title: 'Mulai',
       dataIndex: 'startDate',
       key: 'startDate',
-      render: (d) => dayjs(d).format('DD MMM YYYY'),
-      sorter: true,
+      render: (date: string) => dayjs(date).format('DD/MM/YYYY'),
     },
     {
-      title: 'Tanggal Selesai',
+      title: 'Selesai',
       dataIndex: 'endDate',
       key: 'endDate',
-      render: (d) => dayjs(d).format('DD MMM YYYY'),
-    },
-    {
-      title: 'Total',
-      dataIndex: 'totalAmount',
-      key: 'totalAmount',
-      render: (amount) => `Rp ${(amount || 0).toLocaleString('id-ID')}`,
-      sorter: true,
+      render: (date: string) => dayjs(date).format('DD/MM/YYYY'),
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (status) => <StatusTag type="booking" status={status} />,
+      render: (status: string) => <StatusTag status={status} type="booking" />,
+    },
+    {
+      title: 'Total',
+      dataIndex: 'totalAmount',
+      key: 'totalAmount',
+      render: (amount: number) => `Rp ${amount?.toLocaleString('id-ID')}`,
     },
     {
       title: 'Aksi',
       key: 'action',
       width: 80,
-      render: (_, record) => (
+      render: (_: any, record: Booking) => (
         <Button type="link" icon={<EyeOutlined />} onClick={() => navigate(`/bookings/${record.id}`)} />
       ),
     },
@@ -104,57 +100,66 @@ const BookingListPage: React.FC = () => {
     <div>
       <PageHeader
         title="Daftar Booking"
-        subtitle="Kelola semua pesanan rental"
-        extra={
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/bookings/new')}>
-            Buat Booking
+        subtitle={`Total ${total} booking`}
+        breadcrumbs={[{ title: 'Dashboard', path: '/' }, { title: 'Booking' }]}
+      >
+        <Space>
+          <Button icon={<CalendarOutlined />} onClick={() => navigate('/bookings/calendar')}>
+            Kalender
           </Button>
-        }
-      />
-      <Card>
-        <Space style={{ marginBottom: 16 }} wrap>
-          <Input
-            placeholder="Cari no. booking/customer..."
-            prefix={<SearchOutlined />}
-            style={{ width: 250 }}
-            onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
-            allowClear
-          />
-          <Select
-            placeholder="Status"
-            allowClear
-            style={{ width: 150 }}
-            onChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}
-            options={Object.values(BookingStatus).map((s) => ({ label: s, value: s }))}
-          />
-          <RangePicker
-            onChange={(dates) => {
-              if (dates) {
-                setFilters((prev) => ({
-                  ...prev,
-                  startDate: dates[0]?.toISOString(),
-                  endDate: dates[1]?.toISOString(),
-                }));
-              } else {
-                setFilters((prev) => ({ ...prev, startDate: undefined, endDate: undefined }));
-              }
-            }}
-          />
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/bookings/create')}>
+            Tambah Booking
+          </Button>
         </Space>
-        <Table
-          columns={columns}
-          dataSource={bookings}
-          rowKey="id"
-          loading={loading}
-          pagination={{
-            ...pagination,
-            showSizeChanger: true,
-            showTotal: (total) => `Total ${total} booking`,
-          }}
-          onChange={(pag) => setPagination(pag)}
-          scroll={{ x: 1100 }}
+      </PageHeader>
+
+      <Space style={{ marginBottom: 16, flexWrap: 'wrap' }} size={12}>
+        <Input
+          placeholder="Cari booking..."
+          prefix={<SearchOutlined />}
+          allowClear
+          style={{ width: 220 }}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
         />
-      </Card>
+        <Select
+          placeholder="Status"
+          allowClear
+          style={{ width: 160 }}
+          onChange={(val) => { setStatusFilter(val); setPage(1); }}
+        >
+          <Option value="PENDING">Menunggu</Option>
+          <Option value="CONFIRMED">Dikonfirmasi</Option>
+          <Option value="ONGOING">Berlangsung</Option>
+          <Option value="COMPLETED">Selesai</Option>
+          <Option value="CANCELLED">Dibatalkan</Option>
+          <Option value="OVERDUE">Terlambat</Option>
+        </Select>
+        <RangePicker
+          onChange={(_, dateStrings) => {
+            if (dateStrings[0] && dateStrings[1]) {
+              setDateRange(dateStrings as [string, string]);
+            } else {
+              setDateRange(undefined);
+            }
+            setPage(1);
+          }}
+        />
+      </Space>
+
+      <Table
+        columns={columns}
+        dataSource={bookings}
+        rowKey="id"
+        loading={loading}
+        scroll={{ x: 1100 }}
+        pagination={{
+          current: page,
+          total,
+          pageSize: 10,
+          onChange: setPage,
+          showTotal: (total) => `Total ${total} data`,
+        }}
+      />
     </div>
   );
 };

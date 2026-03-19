@@ -1,83 +1,90 @@
 import React from 'react';
 import { Tag } from 'antd';
-import {
-  BookingStatus,
-  PaymentStatus,
-  CarStatus,
-  DriverStatus,
-  MaintenanceStatus,
-} from '@/types';
-
-const bookingStatusConfig: Record<BookingStatus, { color: string; label: string }> = {
-  [BookingStatus.PENDING]: { color: 'orange', label: 'Menunggu' },
-  [BookingStatus.CONFIRMED]: { color: 'blue', label: 'Dikonfirmasi' },
-  [BookingStatus.ONGOING]: { color: 'green', label: 'Berlangsung' },
-  [BookingStatus.COMPLETED]: { color: 'default', label: 'Selesai' },
-  [BookingStatus.CANCELLED]: { color: 'red', label: 'Dibatalkan' },
-  [BookingStatus.OVERDUE]: { color: 'volcano', label: 'Terlambat' },
-};
-
-const paymentStatusConfig: Record<PaymentStatus, { color: string; label: string }> = {
-  [PaymentStatus.PENDING]: { color: 'orange', label: 'Menunggu' },
-  [PaymentStatus.PAID]: { color: 'green', label: 'Lunas' },
-  [PaymentStatus.PARTIAL]: { color: 'blue', label: 'Sebagian' },
-  [PaymentStatus.REFUNDED]: { color: 'purple', label: 'Dikembalikan' },
-  [PaymentStatus.FAILED]: { color: 'red', label: 'Gagal' },
-  [PaymentStatus.EXPIRED]: { color: 'default', label: 'Kadaluarsa' },
-};
-
-const carStatusConfig: Record<CarStatus, { color: string; label: string }> = {
-  [CarStatus.AVAILABLE]: { color: 'green', label: 'Tersedia' },
-  [CarStatus.RENTED]: { color: 'blue', label: 'Disewa' },
-  [CarStatus.MAINTENANCE]: { color: 'orange', label: 'Perawatan' },
-  [CarStatus.INACTIVE]: { color: 'default', label: 'Nonaktif' },
-};
-
-const driverStatusConfig: Record<DriverStatus, { color: string; label: string }> = {
-  [DriverStatus.AVAILABLE]: { color: 'green', label: 'Tersedia' },
-  [DriverStatus.ON_TRIP]: { color: 'blue', label: 'Dalam Perjalanan' },
-  [DriverStatus.OFF_DUTY]: { color: 'orange', label: 'Libur' },
-  [DriverStatus.INACTIVE]: { color: 'default', label: 'Nonaktif' },
-};
-
-const maintenanceStatusConfig: Record<MaintenanceStatus, { color: string; label: string }> = {
-  [MaintenanceStatus.SCHEDULED]: { color: 'blue', label: 'Terjadwal' },
-  [MaintenanceStatus.IN_PROGRESS]: { color: 'orange', label: 'Berlangsung' },
-  [MaintenanceStatus.COMPLETED]: { color: 'green', label: 'Selesai' },
-  [MaintenanceStatus.CANCELLED]: { color: 'red', label: 'Dibatalkan' },
-};
 
 interface StatusTagProps {
-  type: 'booking' | 'payment' | 'car' | 'driver' | 'maintenance';
   status: string;
+  type: 'booking' | 'payment' | 'car' | 'driver' | 'maintenance';
 }
 
-const StatusTag: React.FC<StatusTagProps> = ({ type, status }) => {
-  let config: { color: string; label: string } | undefined;
+const colorMap: Record<string, Record<string, string>> = {
+  booking: {
+    PENDING: 'orange',
+    CONFIRMED: 'blue',
+    ONGOING: 'green',
+    COMPLETED: 'default',
+    CANCELLED: 'red',
+    OVERDUE: 'volcano',
+  },
+  payment: {
+    PENDING: 'orange',
+    PAID: 'green',
+    PARTIAL: 'cyan',
+    REFUNDED: 'purple',
+    FAILED: 'red',
+    EXPIRED: 'default',
+  },
+  car: {
+    AVAILABLE: 'green',
+    RENTED: 'blue',
+    MAINTENANCE: 'orange',
+    INACTIVE: 'default',
+  },
+  driver: {
+    AVAILABLE: 'green',
+    ON_TRIP: 'blue',
+    OFF_DUTY: 'orange',
+    INACTIVE: 'default',
+  },
+  maintenance: {
+    SCHEDULED: 'blue',
+    IN_PROGRESS: 'orange',
+    COMPLETED: 'green',
+    CANCELLED: 'red',
+  },
+};
 
-  switch (type) {
-    case 'booking':
-      config = bookingStatusConfig[status as BookingStatus];
-      break;
-    case 'payment':
-      config = paymentStatusConfig[status as PaymentStatus];
-      break;
-    case 'car':
-      config = carStatusConfig[status as CarStatus];
-      break;
-    case 'driver':
-      config = driverStatusConfig[status as DriverStatus];
-      break;
-    case 'maintenance':
-      config = maintenanceStatusConfig[status as MaintenanceStatus];
-      break;
-  }
+const labelMap: Record<string, Record<string, string>> = {
+  booking: {
+    PENDING: 'Menunggu',
+    CONFIRMED: 'Dikonfirmasi',
+    ONGOING: 'Berlangsung',
+    COMPLETED: 'Selesai',
+    CANCELLED: 'Dibatalkan',
+    OVERDUE: 'Terlambat',
+  },
+  payment: {
+    PENDING: 'Menunggu',
+    PAID: 'Lunas',
+    PARTIAL: 'Sebagian',
+    REFUNDED: 'Dikembalikan',
+    FAILED: 'Gagal',
+    EXPIRED: 'Kadaluarsa',
+  },
+  car: {
+    AVAILABLE: 'Tersedia',
+    RENTED: 'Disewa',
+    MAINTENANCE: 'Perawatan',
+    INACTIVE: 'Nonaktif',
+  },
+  driver: {
+    AVAILABLE: 'Tersedia',
+    ON_TRIP: 'Dalam Perjalanan',
+    OFF_DUTY: 'Libur',
+    INACTIVE: 'Nonaktif',
+  },
+  maintenance: {
+    SCHEDULED: 'Terjadwal',
+    IN_PROGRESS: 'Dalam Proses',
+    COMPLETED: 'Selesai',
+    CANCELLED: 'Dibatalkan',
+  },
+};
 
-  if (!config) {
-    return <Tag>{status}</Tag>;
-  }
+const StatusTag: React.FC<StatusTagProps> = ({ status, type }) => {
+  const color = colorMap[type]?.[status] || 'default';
+  const label = labelMap[type]?.[status] || status;
 
-  return <Tag color={config.color}>{config.label}</Tag>;
+  return <Tag color={color}>{label}</Tag>;
 };
 
 export default StatusTag;

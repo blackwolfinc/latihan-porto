@@ -1,79 +1,48 @@
 import React from 'react';
-import { Card, Statistic, Typography } from 'antd';
+import { Card, Statistic, Space, Typography } from 'antd';
 import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
 
+const { Text } = Typography;
+
 interface StatCardProps {
+  icon: React.ReactNode;
   title: string;
-  value: number | string;
-  prefix?: React.ReactNode;
-  suffix?: string;
-  precision?: number;
+  value: string | number;
   trend?: number;
-  trendLabel?: string;
-  icon?: React.ReactNode;
-  color?: string;
+  prefix?: string;
+  suffix?: string;
   loading?: boolean;
 }
 
-const StatCard: React.FC<StatCardProps> = ({
-  title,
-  value,
-  prefix,
-  suffix,
-  precision,
-  trend,
-  trendLabel,
-  icon,
-  color = '#1677ff',
-  loading = false,
-}) => {
+const StatCard: React.FC<StatCardProps> = ({ icon, title, value, trend, prefix, suffix, loading }) => {
   return (
     <Card loading={loading} hoverable style={{ height: '100%' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div style={{ flex: 1 }}>
-          <Statistic
-            title={title}
-            value={value}
-            prefix={prefix}
-            suffix={suffix}
-            precision={precision}
-          />
-          {trend !== undefined && (
-            <div style={{ marginTop: 8 }}>
-              <Typography.Text
-                type={trend >= 0 ? 'success' : 'danger'}
-                style={{ fontSize: 13 }}
-              >
-                {trend >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
-                {' '}
-                {Math.abs(trend)}%
-                {trendLabel && (
-                  <Typography.Text type="secondary" style={{ fontSize: 12, marginLeft: 4 }}>
-                    {trendLabel}
-                  </Typography.Text>
-                )}
-              </Typography.Text>
-            </div>
-          )}
-        </div>
-        {icon && (
-          <div
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: 12,
-              background: `${color}15`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 24,
-              color,
-            }}
-          >
-            {icon}
-          </div>
+      <Space direction="vertical" size={4} style={{ width: '100%' }}>
+        <Space>
+          <span style={{ fontSize: 24, color: '#1677ff' }}>{icon}</span>
+          <Text type="secondary">{title}</Text>
+        </Space>
+        <Statistic
+          value={value}
+          prefix={prefix}
+          suffix={suffix}
+          valueStyle={{ fontSize: 28, fontWeight: 600 }}
+        />
+        {trend !== undefined && (
+          <Space>
+            {trend >= 0 ? (
+              <Text style={{ color: '#52c41a', fontSize: 13 }}>
+                <ArrowUpOutlined /> {trend}%
+              </Text>
+            ) : (
+              <Text style={{ color: '#ff4d4f', fontSize: 13 }}>
+                <ArrowDownOutlined /> {Math.abs(trend)}%
+              </Text>
+            )}
+            <Text type="secondary" style={{ fontSize: 13 }}>dari bulan lalu</Text>
+          </Space>
         )}
-      </div>
+      </Space>
     </Card>
   );
 };
