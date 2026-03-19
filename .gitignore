@@ -1,0 +1,67 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+*.js.map
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backend
+backend/node_modules/
+backend/dist/
+backend/.env
+
+# Dashboard
+dashboard/node_modules/
+dashboard/dist/
+dashboard/.env
+
+# Flutter
+mobile/.dart_tool/
+mobile/.packages
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/app/debug/
+mobile/android/app/profile/
+mobile/android/app/release/
+mobile/ios/Pods/
+mobile/ios/.symlinks/
+mobile/ios/Flutter/Flutter.framework
+mobile/ios/Flutter/Flutter.podspec
+mobile/ios/Runner.xcworkspace/
+mobile/.pub-cache/
+mobile/pubspec.lock
+
+# Logs
+*.log
+npm-debug.log*
+
+# Docker
+docker-data/
+
+# Coverage
+coverage/
+
+# Prisma
+backend/prisma/migrations/**/migration_lock.toml
