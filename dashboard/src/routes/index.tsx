@@ -42,6 +42,7 @@ const RevenueReportPage = lazy(() => import('@/pages/reports/RevenueReportPage')
 const FleetReportPage = lazy(() => import('@/pages/reports/FleetReportPage'));
 const ExpenseReportPage = lazy(() => import('@/pages/reports/ExpenseReportPage'));
 const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'));
+const InvoiceTemplatePage = lazy(() => import('@/pages/settings/InvoiceTemplatePage'));
 const VerificationListPage = lazy(() => import('@/pages/verification/VerificationListPage'));
 const BlacklistPage = lazy(() => import('@/pages/verification/BlacklistPage'));
 
@@ -118,6 +119,7 @@ const AppRoutes: React.FC = () => {
           <Route path="verification" element={<VerificationListPage />} />
           <Route path="blacklist" element={<BlacklistPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="settings/invoice-template" element={<InvoiceTemplatePage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
