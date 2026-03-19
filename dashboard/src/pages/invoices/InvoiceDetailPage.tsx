@@ -1,5 +1,5 @@
-import React from 'react';
-import { Button, Card, Space, Tag, Table, Divider, Typography, Row, Col, message } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Button, Card, Space, Tag, Table, Divider, Typography, Row, Col, message, Spin, Image } from 'antd';
 import {
   SendOutlined,
   CheckCircleOutlined,
@@ -10,8 +10,9 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import PageHeader from '@/components/shared/PageHeader';
+import { invoiceTemplatesService } from '@/services/invoice-templates.service';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -27,6 +28,52 @@ const STATUS_MAP: Record<string, { color: string; label: string }> = {
 
 const fmtRp = (v: number) =>
   new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(v);
+
+/* ------------------------------------------------------------------ */
+/*  Template type                                                      */
+/* ------------------------------------------------------------------ */
+
+interface InvoiceTemplateData {
+  logoUrl?: string;
+  companyName?: string;
+  companyTagline?: string;
+  headerAddress?: string;
+  headerCity?: string;
+  headerPhone?: string;
+  headerEmail?: string;
+  headerWebsite?: string;
+  headerNpwp?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+  signatureName?: string;
+  signatureTitle?: string;
+  signatureImageUrl?: string;
+  stampImageUrl?: string;
+  bankName?: string;
+  bankAccountNumber?: string;
+  bankAccountName?: string;
+  bankBranch?: string;
+  additionalBanks?: { bankName: string; accountNumber: string; accountName: string }[];
+  termsAndConditions?: string;
+  paymentTerms?: string;
+  footerText?: string;
+  footerNote?: string;
+  invoicePrefix?: string;
+}
+
+const DEFAULT_TEMPLATE: InvoiceTemplateData = {
+  companyName: 'Caritahub Rental',
+  headerAddress: 'Jl. Jend. Sudirman Kav. 52-53',
+  headerCity: 'Jakarta Selatan 12190',
+  headerPhone: '(021) 555-1234',
+  headerNpwp: '01.234.567.8-901.000',
+  primaryColor: '#1565c0',
+  secondaryColor: '#78909c',
+  bankName: 'BCA',
+  bankAccountNumber: '123-456-7890',
+  bankAccountName: 'PT Caritahub Rental Indonesia',
+  footerText: 'Terima kasih atas kepercayaan Anda menggunakan layanan Caritahub Rental.',
+};
 
 /* ------------------------------------------------------------------ */
 /*  Mock invoice                                                       */
@@ -56,11 +103,6 @@ const invoice = {
   taxAmount: 195250,
   total: 1970250,
   notes: 'Pembayaran paling lambat pada tanggal jatuh tempo. Keterlambatan pembayaran akan dikenakan denda 1% per hari.',
-  bankInfo: {
-    bank: 'BCA',
-    account: '123-456-7890',
-    holder: 'PT Caritahub Rental Indonesia',
-  },
 };
 
 /* ------------------------------------------------------------------ */
@@ -71,6 +113,29 @@ const InvoiceDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const statusCfg = STATUS_MAP[invoice.status] || STATUS_MAP.DRAFT;
+
+  const [tmpl, setTmpl] = useState<InvoiceTemplateData>(DEFAULT_TEMPLATE);
+  const [loadingTemplate, setLoadingTemplate] = useState(true);
+
+  // Load org template
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await invoiceTemplatesService.get();
+        if (res.data) {
+          setTmpl({ ...DEFAULT_TEMPLATE, ...res.data });
+        }
+      } catch {
+        // use defaults
+      } finally {
+        setLoadingTemplate(false);
+      }
+    };
+    load();
+  }, []);
+
+  const primary = tmpl.primaryColor || '#1565c0';
+  const secondary = tmpl.secondaryColor || '#78909c';
 
   const itemCols = [
     { title: 'No', dataIndex: 'no', key: 'no', width: 50, align: 'center' as const },
@@ -162,159 +227,260 @@ const InvoiceDetailPage: React.FC = () => {
         }}
         styles={{ body: { padding: '48px 48px 36px' } }}
       >
-        {/* Header */}
-        <Row justify="space-between" align="top" style={{ marginBottom: 32 }}>
-          <Col>
-            <div style={{ marginBottom: 4 }}>
-              <span style={{ fontSize: 22, fontWeight: 800, color: '#1565c0', letterSpacing: -0.5 }}>
-                Caritahub Rental
-              </span>
-            </div>
-            <Text style={{ fontSize: 12, color: '#78909c', display: 'block', lineHeight: 1.6 }}>
-              PT Caritahub Rental Indonesia<br />
-              Jl. Jend. Sudirman Kav. 52-53<br />
-              Jakarta Selatan 12190<br />
-              Telp: (021) 555-1234
-            </Text>
-          </Col>
-          <Col style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 28, fontWeight: 800, color: '#1565c0', letterSpacing: 3, marginBottom: 8 }}>
-              INVOICE
-            </div>
-            <Text style={{ fontSize: 14, fontWeight: 600, color: '#263238', display: 'block' }}>
-              {invoice.invoiceNumber}
-            </Text>
-          </Col>
-        </Row>
+        {loadingTemplate ? (
+          <div style={{ textAlign: 'center', padding: 40 }}><Spin /></div>
+        ) : (
+          <>
+            {/* Header with template branding */}
+            <Row justify="space-between" align="top" style={{ marginBottom: 32 }}>
+              <Col>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+                  {tmpl.logoUrl ? (
+                    <Image src={tmpl.logoUrl} height={44} preview={false} style={{ borderRadius: 6 }} />
+                  ) : (
+                    <div
+                      style={{
+                        width: 44, height: 44, background: primary, borderRadius: 8,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: '#fff', fontWeight: 800, fontSize: 20,
+                      }}
+                    >
+                      {(tmpl.companyName || 'C').charAt(0)}
+                    </div>
+                  )}
+                  <div>
+                    <span style={{ fontSize: 22, fontWeight: 800, color: primary, letterSpacing: -0.5 }}>
+                      {tmpl.companyName || 'Caritahub Rental'}
+                    </span>
+                    {tmpl.companyTagline && (
+                      <div style={{ fontSize: 11, color: secondary, fontStyle: 'italic' }}>{tmpl.companyTagline}</div>
+                    )}
+                  </div>
+                </div>
+                <Text style={{ fontSize: 12, color: secondary, display: 'block', lineHeight: 1.6, marginTop: 4 }}>
+                  {tmpl.headerAddress && <>{tmpl.headerAddress}<br /></>}
+                  {tmpl.headerCity && <>{tmpl.headerCity}<br /></>}
+                  {tmpl.headerPhone && <>Telp: {tmpl.headerPhone}<br /></>}
+                  {tmpl.headerEmail && <>{tmpl.headerEmail}</>}
+                </Text>
+              </Col>
+              <Col style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 28, fontWeight: 800, color: primary, letterSpacing: 3, marginBottom: 8 }}>
+                  INVOICE
+                </div>
+                <Text style={{ fontSize: 14, fontWeight: 600, color: '#263238', display: 'block' }}>
+                  {invoice.invoiceNumber}
+                </Text>
+              </Col>
+            </Row>
 
-        {/* From / To + Date info */}
-        <Row gutter={32} style={{ marginBottom: 32 }}>
-          <Col span={8}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#90a4ae', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
-              Dari
-            </div>
-            <Text style={{ fontWeight: 600, fontSize: 14, display: 'block', color: '#263238' }}>Caritahub Rental</Text>
-            <Text style={{ fontSize: 12, color: '#78909c', display: 'block', lineHeight: 1.6 }}>
-              Jl. Jend. Sudirman Kav. 52-53<br />
-              Jakarta Selatan 12190<br />
-              NPWP: 01.234.567.8-901.000
-            </Text>
-          </Col>
-          <Col span={8}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#90a4ae', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
-              Kepada
-            </div>
-            <Text style={{ fontWeight: 600, fontSize: 14, display: 'block', color: '#263238' }}>
-              {invoice.customer.name}
-            </Text>
-            <Text style={{ fontSize: 12, color: '#78909c', display: 'block', lineHeight: 1.6 }}>
-              {invoice.customer.address}<br />
-              {invoice.customer.phone}<br />
-              {invoice.customer.email}
-            </Text>
-          </Col>
-          <Col span={8}>
-            <div style={{
-              background: '#f5f7fa',
-              borderRadius: 8,
-              padding: '14px 16px',
-            }}>
-              <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: 11, color: '#90a4ae', fontWeight: 600, marginBottom: 2 }}>Tanggal Invoice</div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#263238' }}>{dayjs(invoice.issueDate).format('DD MMMM YYYY')}</div>
-              </div>
-              <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: 11, color: '#90a4ae', fontWeight: 600, marginBottom: 2 }}>Jatuh Tempo</div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#263238' }}>{dayjs(invoice.dueDate).format('DD MMMM YYYY')}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 11, color: '#90a4ae', fontWeight: 600, marginBottom: 2 }}>Status</div>
-                <Tag color={statusCfg.color} style={{ fontWeight: 600 }}>{statusCfg.label}</Tag>
-              </div>
-            </div>
-          </Col>
-        </Row>
+            {/* Colored separator */}
+            <div style={{ height: 3, background: primary, borderRadius: 2, marginBottom: 28 }} />
 
-        {/* Items table */}
-        <Table
-          columns={itemCols}
-          dataSource={invoice.items}
-          pagination={false}
-          size="small"
-          bordered
-          style={{ marginBottom: 24 }}
-          rowClassName={(_, idx) => (idx % 2 === 0 ? '' : '')}
-        />
+            {/* From / To + Date info */}
+            <Row gutter={32} style={{ marginBottom: 32 }}>
+              <Col span={8}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: secondary, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
+                  Dari
+                </div>
+                <Text style={{ fontWeight: 600, fontSize: 14, display: 'block', color: '#263238' }}>
+                  {tmpl.companyName || 'Caritahub Rental'}
+                </Text>
+                <Text style={{ fontSize: 12, color: secondary, display: 'block', lineHeight: 1.6 }}>
+                  {tmpl.headerAddress && <>{tmpl.headerAddress}<br /></>}
+                  {tmpl.headerCity && <>{tmpl.headerCity}<br /></>}
+                  {tmpl.headerNpwp && <>NPWP: {tmpl.headerNpwp}</>}
+                </Text>
+              </Col>
+              <Col span={8}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: secondary, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
+                  Kepada
+                </div>
+                <Text style={{ fontWeight: 600, fontSize: 14, display: 'block', color: '#263238' }}>
+                  {invoice.customer.name}
+                </Text>
+                <Text style={{ fontSize: 12, color: secondary, display: 'block', lineHeight: 1.6 }}>
+                  {invoice.customer.address}<br />
+                  {invoice.customer.phone}<br />
+                  {invoice.customer.email}
+                </Text>
+              </Col>
+              <Col span={8}>
+                <div style={{
+                  background: '#f5f7fa',
+                  borderRadius: 8,
+                  padding: '14px 16px',
+                }}>
+                  <div style={{ marginBottom: 10 }}>
+                    <div style={{ fontSize: 11, color: secondary, fontWeight: 600, marginBottom: 2 }}>Tanggal Invoice</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#263238' }}>{dayjs(invoice.issueDate).format('DD MMMM YYYY')}</div>
+                  </div>
+                  <div style={{ marginBottom: 10 }}>
+                    <div style={{ fontSize: 11, color: secondary, fontWeight: 600, marginBottom: 2 }}>Jatuh Tempo</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#263238' }}>{dayjs(invoice.dueDate).format('DD MMMM YYYY')}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, color: secondary, fontWeight: 600, marginBottom: 2 }}>Status</div>
+                    <Tag color={statusCfg.color} style={{ fontWeight: 600 }}>{statusCfg.label}</Tag>
+                  </div>
+                </div>
+              </Col>
+            </Row>
 
-        {/* Totals */}
-        <Row justify="end" style={{ marginBottom: 28 }}>
-          <Col span={10}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Text style={{ color: '#78909c' }}>Subtotal</Text>
-                <Text style={{ fontWeight: 500 }}>{fmtRp(invoice.subtotal)}</Text>
+            {/* Items table */}
+            <Table
+              columns={itemCols}
+              dataSource={invoice.items}
+              pagination={false}
+              size="small"
+              bordered
+              style={{ marginBottom: 24 }}
+              components={{
+                header: {
+                  cell: (props: any) => (
+                    <th {...props} style={{ ...props.style, background: primary, color: '#fff', fontWeight: 600 }} />
+                  ),
+                },
+              }}
+            />
+
+            {/* Totals */}
+            <Row justify="end" style={{ marginBottom: 28 }}>
+              <Col span={10}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Text style={{ color: secondary }}>Subtotal</Text>
+                    <Text style={{ fontWeight: 500 }}>{fmtRp(invoice.subtotal)}</Text>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Text style={{ color: secondary }}>Diskon</Text>
+                    <Text style={{ color: '#2e7d32', fontWeight: 500 }}>- {fmtRp(invoice.discount)}</Text>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Text style={{ color: secondary }}>PPN ({invoice.taxRate}%)</Text>
+                    <Text style={{ fontWeight: 500 }}>{fmtRp(invoice.taxAmount)}</Text>
+                  </div>
+                  <Divider style={{ margin: '4px 0' }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <Text style={{ fontSize: 15, fontWeight: 700, color: '#263238' }}>Total</Text>
+                    <Text style={{ fontSize: 22, fontWeight: 800, color: primary }}>{fmtRp(invoice.total)}</Text>
+                  </div>
+                </div>
+              </Col>
+            </Row>
+
+            {/* Bank info from template */}
+            {(tmpl.bankName || tmpl.bankAccountNumber) && (
+              <div
+                style={{
+                  background: `${primary}0D`,
+                  borderRadius: 8,
+                  padding: '14px 18px',
+                  marginBottom: 20,
+                  borderLeft: `3px solid ${primary}`,
+                }}
+              >
+                <Text style={{ fontSize: 12, fontWeight: 700, color: primary, display: 'block', marginBottom: 4 }}>
+                  Informasi Pembayaran
+                </Text>
+                <Text style={{ fontSize: 13, color: '#37474f', display: 'block', lineHeight: 1.7 }}>
+                  Bank {tmpl.bankName} &middot; No. Rekening: {tmpl.bankAccountNumber}<br />
+                  a.n. {tmpl.bankAccountName}
+                  {tmpl.bankBranch && <> &middot; {tmpl.bankBranch}</>}
+                </Text>
+                {tmpl.additionalBanks && tmpl.additionalBanks.length > 0 && (
+                  <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px dashed #ccc' }}>
+                    {tmpl.additionalBanks.map((bank, idx) => (
+                      <Text key={idx} style={{ fontSize: 12, color: '#37474f', display: 'block', lineHeight: 1.6 }}>
+                        Bank {bank.bankName} &middot; No. Rekening: {bank.accountNumber} &middot; a.n. {bank.accountName}
+                      </Text>
+                    ))}
+                  </div>
+                )}
+                {tmpl.paymentTerms && (
+                  <Text style={{ fontSize: 11, color: secondary, display: 'block', marginTop: 6, fontStyle: 'italic' }}>
+                    {tmpl.paymentTerms}
+                  </Text>
+                )}
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Text style={{ color: '#78909c' }}>Diskon</Text>
-                <Text style={{ color: '#2e7d32', fontWeight: 500 }}>- {fmtRp(invoice.discount)}</Text>
+            )}
+
+            {/* Notes */}
+            {invoice.notes && (
+              <div
+                style={{
+                  background: '#f5f5f5',
+                  borderRadius: 8,
+                  padding: '12px 16px',
+                  marginBottom: 16,
+                  borderLeft: '3px solid #bdbdbd',
+                }}
+              >
+                <Text style={{ fontSize: 12, fontWeight: 600, color: secondary, display: 'block', marginBottom: 4 }}>
+                  Catatan
+                </Text>
+                <Text style={{ fontSize: 12, color: '#546e7a' }}>{invoice.notes}</Text>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Text style={{ color: '#78909c' }}>PPN ({invoice.taxRate}%)</Text>
-                <Text style={{ fontWeight: 500 }}>{fmtRp(invoice.taxAmount)}</Text>
+            )}
+
+            {/* Terms & Conditions from template */}
+            {tmpl.termsAndConditions && (
+              <div
+                style={{
+                  background: '#fafafa',
+                  borderRadius: 8,
+                  padding: '12px 16px',
+                  marginBottom: 24,
+                  borderLeft: '3px solid #e0e0e0',
+                }}
+              >
+                <Text style={{ fontSize: 12, fontWeight: 600, color: secondary, display: 'block', marginBottom: 4 }}>
+                  Syarat & Ketentuan
+                </Text>
+                <Text style={{ fontSize: 11, color: '#546e7a', whiteSpace: 'pre-line' }}>{tmpl.termsAndConditions}</Text>
               </div>
-              <Divider style={{ margin: '4px 0' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <Text style={{ fontSize: 15, fontWeight: 700, color: '#263238' }}>Total</Text>
-                <Text style={{ fontSize: 22, fontWeight: 800, color: '#1565c0' }}>{fmtRp(invoice.total)}</Text>
-              </div>
+            )}
+
+            {/* Signature block from template */}
+            {(tmpl.signatureName || tmpl.signatureTitle) && (
+              <Row justify="end" style={{ marginBottom: 20 }}>
+                <Col style={{ textAlign: 'center', minWidth: 180 }}>
+                  <Text style={{ fontSize: 12, color: secondary, display: 'block', marginBottom: 8 }}>
+                    Hormat kami,
+                  </Text>
+                  {tmpl.signatureImageUrl ? (
+                    <Image src={tmpl.signatureImageUrl} height={48} preview={false} style={{ marginBottom: 4 }} />
+                  ) : (
+                    <div style={{ height: 48, marginBottom: 4 }} />
+                  )}
+                  {tmpl.stampImageUrl && (
+                    <div style={{ marginBottom: 4 }}>
+                      <Image src={tmpl.stampImageUrl} height={40} preview={false} style={{ opacity: 0.6 }} />
+                    </div>
+                  )}
+                  <div style={{ borderTop: '1px solid #374151', paddingTop: 6, marginTop: 4 }}>
+                    <Text style={{ fontWeight: 700, fontSize: 13, display: 'block' }}>{tmpl.signatureName}</Text>
+                    <Text style={{ fontSize: 11, color: secondary, display: 'block' }}>{tmpl.signatureTitle}</Text>
+                  </div>
+                </Col>
+              </Row>
+            )}
+
+            {/* Footer from template */}
+            <Divider style={{ margin: '16px 0' }} />
+            <div style={{ textAlign: 'center', paddingBottom: 8 }}>
+              <Text style={{ fontSize: 13, color: secondary, fontStyle: 'italic' }}>
+                {tmpl.footerText || 'Terima kasih atas kepercayaan Anda menggunakan layanan Caritahub Rental.'}
+              </Text>
+              {tmpl.footerNote && (
+                <Text style={{ fontSize: 11, color: '#9ca3af', display: 'block', marginTop: 4 }}>{tmpl.footerNote}</Text>
+              )}
+              {tmpl.headerWebsite && (
+                <Text style={{ fontSize: 11, color: primary, display: 'block', marginTop: 4 }}>{tmpl.headerWebsite}</Text>
+              )}
             </div>
-          </Col>
-        </Row>
-
-        {/* Bank info */}
-        <div
-          style={{
-            background: '#e3f2fd',
-            borderRadius: 8,
-            padding: '14px 18px',
-            marginBottom: 20,
-            borderLeft: '3px solid #1565c0',
-          }}
-        >
-          <Text style={{ fontSize: 12, fontWeight: 700, color: '#1565c0', display: 'block', marginBottom: 4 }}>
-            Informasi Pembayaran
-          </Text>
-          <Text style={{ fontSize: 13, color: '#37474f', display: 'block', lineHeight: 1.7 }}>
-            Bank {invoice.bankInfo.bank} &middot; No. Rekening: {invoice.bankInfo.account}<br />
-            a.n. {invoice.bankInfo.holder}
-          </Text>
-        </div>
-
-        {/* Notes */}
-        {invoice.notes && (
-          <div
-            style={{
-              background: '#f5f5f5',
-              borderRadius: 8,
-              padding: '12px 16px',
-              marginBottom: 24,
-              borderLeft: '3px solid #bdbdbd',
-            }}
-          >
-            <Text style={{ fontSize: 12, fontWeight: 600, color: '#78909c', display: 'block', marginBottom: 4 }}>
-              Catatan
-            </Text>
-            <Text style={{ fontSize: 12, color: '#546e7a' }}>{invoice.notes}</Text>
-          </div>
+          </>
         )}
-
-        {/* Footer */}
-        <Divider style={{ margin: '16px 0' }} />
-        <div style={{ textAlign: 'center', paddingBottom: 8 }}>
-          <Text style={{ fontSize: 13, color: '#78909c', fontStyle: 'italic' }}>
-            Terima kasih atas kepercayaan Anda menggunakan layanan Caritahub Rental.
-          </Text>
-        </div>
       </Card>
     </div>
   );

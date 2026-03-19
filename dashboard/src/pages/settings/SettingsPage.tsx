@@ -29,7 +29,10 @@ import {
   BellOutlined,
   TeamOutlined,
   SettingOutlined,
+  FileTextOutlined,
+  RightOutlined,
 } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import PageHeader from '@/components/shared/PageHeader';
 import { useAuthStore } from '@/stores/auth.store';
 import type { User, Role } from '@/types';
@@ -549,6 +552,31 @@ const SubscriptionTab: React.FC = () => {
   );
 };
 
+// Invoice Template Tab (link to dedicated page)
+const InvoiceTemplateTab: React.FC = () => {
+  const navigate = useNavigate();
+
+  return (
+    <Card>
+      <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+        <FileTextOutlined style={{ fontSize: 48, color: '#1677ff', marginBottom: 16 }} />
+        <h3 style={{ marginBottom: 8 }}>Template Invoice</h3>
+        <p style={{ color: '#8c8c8c', marginBottom: 24, maxWidth: 480, margin: '0 auto 24px' }}>
+          Kustomisasi tampilan invoice Anda dengan logo, warna, tanda tangan digital, informasi bank, dan syarat &amp; ketentuan. Preview langsung tersedia saat mengedit.
+        </p>
+        <Button
+          type="primary"
+          size="large"
+          icon={<EditOutlined />}
+          onClick={() => navigate('/settings/invoice-template')}
+        >
+          Kelola Template Invoice <RightOutlined />
+        </Button>
+      </div>
+    </Card>
+  );
+};
+
 // Main Settings Page
 const SettingsPage: React.FC = () => {
   const tabItems = [
@@ -587,6 +615,15 @@ const SettingsPage: React.FC = () => {
         </span>
       ),
       children: <NotificationSettingsTab />,
+    },
+    {
+      key: 'invoice-template',
+      label: (
+        <span>
+          <FileTextOutlined /> Template Invoice
+        </span>
+      ),
+      children: <InvoiceTemplateTab />,
     },
     {
       key: 'subscription',
