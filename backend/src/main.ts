@@ -26,7 +26,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   const config = new DocumentBuilder()
-    .setTitle('Car Rental Management API')
+    .setTitle('CaritaHub Rental API')
     .setDescription('API untuk manajemen rental mobil')
     .setVersion('1.0')
     .addBearerAuth()

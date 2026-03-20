@@ -105,7 +105,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Bergabung dengan Caritahub Rental',
+                    'Bergabung dengan CaritaHub Rental',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.textSecondary,
                         ),

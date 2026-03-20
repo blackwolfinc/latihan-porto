@@ -81,7 +81,7 @@ class AppTranslations {
     'bookingHistory': {'id': 'Riwayat Booking', 'en': 'Booking History', 'zh': '预订历史'},
     'settings': {'id': 'Pengaturan', 'en': 'Settings', 'zh': '设置'},
     'help': {'id': 'Bantuan', 'en': 'Help', 'zh': '帮助'},
-    'about': {'id': 'Tentang Caritahub Rental', 'en': 'About Caritahub Rental', 'zh': '关于Caritahub Rental'},
+    'about': {'id': 'Tentang CaritaHub Rental', 'en': 'About CaritaHub Rental', 'zh': '关于CaritaHub Rental'},
     'logout': {'id': 'Keluar', 'en': 'Logout', 'zh': '退出'},
     'save': {'id': 'Simpan', 'en': 'Save', 'zh': '保存'},
 

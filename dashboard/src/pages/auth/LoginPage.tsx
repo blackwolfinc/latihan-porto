@@ -38,7 +38,7 @@ const LoginPage: React.FC = () => {
       <Card style={{ width: 400, borderRadius: 12, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
         <Space direction="vertical" align="center" style={{ width: '100%', marginBottom: 32 }}>
           <CarOutlined style={{ fontSize: 48, color: '#1677ff' }} />
-          <Title level={2} style={{ margin: 0 }}>Caritahub Rental</Title>
+          <Title level={2} style={{ margin: 0 }}>CaritaHub Rental</Title>
           <Text type="secondary">Sistem Manajemen Rental Mobil</Text>
         </Space>
 

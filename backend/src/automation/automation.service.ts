@@ -57,7 +57,7 @@ export class AutomationService {
         data: {
           userId: booking.customerId,
           title: 'Rental Selesai',
-          body: 'Masa sewa Anda telah berakhir. Terima kasih telah menggunakan Caritahub Rental.',
+          body: 'Masa sewa Anda telah berakhir. Terima kasih telah menggunakan CaritaHub Rental.',
           type: 'BOOKING',
         },
       });

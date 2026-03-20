@@ -29,7 +29,7 @@ module.exports = async (req, res) => {
     app.setGlobalPrefix('api');
 
     const config = new DocumentBuilder()
-      .setTitle('Car Rental Management API')
+      .setTitle('CaritaHub Rental API')
       .setVersion('1.0')
       .addBearerAuth()
       .build();

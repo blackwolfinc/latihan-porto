@@ -68,7 +68,7 @@ const SECONDARY_PRESETS = ['#6b7280', '#78909c', '#64748b', '#9ca3af', '#475569'
 
 const DEFAULT_TEMPLATE: TemplateState = {
   logoUrl: '',
-  companyName: 'Caritahub Rental',
+  companyName: 'CaritaHub Rental',
   companyTagline: 'Solusi Rental Mobil Terpercaya',
   headerAddress: 'Jl. Jend. Sudirman Kav. 52-53',
   headerCity: 'Jakarta Selatan 12190',
@@ -86,13 +86,13 @@ const DEFAULT_TEMPLATE: TemplateState = {
   stampImageUrl: '',
   bankName: 'Bank BCA',
   bankAccountNumber: '123-456-7890',
-  bankAccountName: 'PT Caritahub Rental Indonesia',
+  bankAccountName: 'PT CaritaHub Rental Indonesia',
   bankBranch: 'KCP Jakarta Pusat',
   additionalBanks: [],
   termsAndConditions:
     '1. Pembayaran dilakukan sebelum masa sewa dimulai.\n2. Keterlambatan pengembalian dikenakan denda 25% per hari.\n3. Kerusakan di luar asuransi menjadi tanggung jawab penyewa.\n4. Pembatalan H-1 dikenakan biaya 50% dari total sewa.',
   paymentTerms: 'Pembayaran dilakukan dalam 7 hari kerja setelah invoice diterbitkan.',
-  footerText: 'Terima kasih atas kepercayaan Anda menggunakan layanan Caritahub Rental.',
+  footerText: 'Terima kasih atas kepercayaan Anda menggunakan layanan CaritaHub Rental.',
   footerNote: 'Invoice ini sah tanpa tanda tangan basah.',
 };
 
@@ -651,7 +651,7 @@ const InvoiceTemplatePage: React.FC = () => {
           </div>
           <div>
             <Text strong style={{ display: 'block', marginBottom: 4 }}>Nama Pemilik Rekening</Text>
-            <Input value={template.bankAccountName} onChange={(e) => update('bankAccountName', e.target.value)} placeholder="PT Caritahub Rental Indonesia" />
+            <Input value={template.bankAccountName} onChange={(e) => update('bankAccountName', e.target.value)} placeholder="PT CaritaHub Rental Indonesia" />
           </div>
           <div>
             <Text strong style={{ display: 'block', marginBottom: 4 }}>Cabang</Text>

@@ -343,7 +343,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                           ),
                           const SizedBox(height: 4),
                           const Text(
-                            'Caritahub Rental',
+                            'CaritaHub Rental',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,

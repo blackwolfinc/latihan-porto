@@ -149,7 +149,7 @@ const Dashboard: React.FC = () => {
     <div>
       <div style={{ marginBottom: 24 }}>
         <Title level={4} style={{ marginBottom: 4 }}>Laporan & Analisa</Title>
-        <Text type="secondary">Overview performa bisnis Caritahub Rental</Text>
+        <Text type="secondary">Overview performa bisnis CaritaHub Rental</Text>
       </div>
 
       {/* KPI Cards - 5 cards including invoice */}

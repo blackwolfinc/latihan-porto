@@ -46,7 +46,7 @@ export class SeedController {
 
     const organization = await this.prisma.organization.create({
       data: {
-        name: 'Caritahub Rental', slug: 'caritahub-rental',
+        name: 'CaritaHub Rental', slug: 'caritahub-rental',
         address: 'Jl. Sudirman No. 1, Jakarta Pusat', city: 'Jakarta',
         phone: '021-5551234', email: 'info@caritahub.com',
         plan: 'STANDARD', isActive: true,

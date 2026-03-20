@@ -196,7 +196,7 @@ const SchedulingPage: React.FC = () => {
     <div>
       <PageHeader
         title="Scheduling"
-        subtitle="Timeline booking kendaraan - Caritahub Rental"
+        subtitle="Timeline booking kendaraan - CaritaHub Rental"
         breadcrumbs={[{ title: 'Dashboard', path: '/' }, { title: 'Scheduling' }]}
       />
 

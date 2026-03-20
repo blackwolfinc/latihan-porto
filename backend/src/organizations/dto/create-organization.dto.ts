@@ -2,7 +2,7 @@ import { IsNotEmpty, IsString, IsOptional, IsEmail } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateOrganizationDto {
-  @ApiProperty({ description: 'Organization name', example: 'Caritahub Rental' })
+  @ApiProperty({ description: 'Organization name', example: 'CaritaHub Rental' })
   @IsString()
   @IsNotEmpty()
   name: string;

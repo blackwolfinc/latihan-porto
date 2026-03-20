@@ -235,7 +235,7 @@ const InvoiceFormPage: React.FC = () => {
     <div>
       <PageHeader
         title="Buat Invoice Baru"
-        subtitle="Caritahub Rental"
+        subtitle="CaritaHub Rental"
         breadcrumbs={[
           { title: 'Dashboard', path: '/' },
           { title: 'Invoice', path: '/invoices' },
@@ -339,7 +339,7 @@ const InvoiceFormPage: React.FC = () => {
               <TextArea
                 rows={3}
                 placeholder="Catatan tambahan untuk invoice (opsional)"
-                defaultValue="Pembayaran dapat dilakukan melalui transfer bank ke rekening BCA 1234567890 a.n. PT Caritahub Rental Indonesia."
+                defaultValue="Pembayaran dapat dilakukan melalui transfer bank ke rekening BCA 1234567890 a.n. PT CaritaHub Rental Indonesia."
               />
             </div>
           </Card>

@@ -32,7 +32,7 @@ async function main() {
   // ── Organization (Tenant) ───────────────────────────────────────
   const organization = await prisma.organization.create({
     data: {
-      name: 'Caritahub Rental',
+      name: 'CaritaHub Rental',
       slug: 'caritahub-rental',
       address: 'Jl. Sudirman No. 1, Jakarta Pusat',
       city: 'Jakarta',

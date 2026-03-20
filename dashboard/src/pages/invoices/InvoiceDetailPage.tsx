@@ -62,7 +62,7 @@ interface InvoiceTemplateData {
 }
 
 const DEFAULT_TEMPLATE: InvoiceTemplateData = {
-  companyName: 'Caritahub Rental',
+  companyName: 'CaritaHub Rental',
   headerAddress: 'Jl. Jend. Sudirman Kav. 52-53',
   headerCity: 'Jakarta Selatan 12190',
   headerPhone: '(021) 555-1234',
@@ -71,8 +71,8 @@ const DEFAULT_TEMPLATE: InvoiceTemplateData = {
   secondaryColor: '#78909c',
   bankName: 'BCA',
   bankAccountNumber: '123-456-7890',
-  bankAccountName: 'PT Caritahub Rental Indonesia',
-  footerText: 'Terima kasih atas kepercayaan Anda menggunakan layanan Caritahub Rental.',
+  bankAccountName: 'PT CaritaHub Rental Indonesia',
+  footerText: 'Terima kasih atas kepercayaan Anda menggunakan layanan CaritaHub Rental.',
 };
 
 /* ------------------------------------------------------------------ */
@@ -278,7 +278,7 @@ const InvoiceDetailPage: React.FC = () => {
                   )}
                   <div>
                     <span style={{ fontSize: 22, fontWeight: 800, color: primary, letterSpacing: -0.5 }}>
-                      {tmpl.companyName || 'Caritahub Rental'}
+                      {tmpl.companyName || 'CaritaHub Rental'}
                     </span>
                     {tmpl.companyTagline && (
                       <div style={{ fontSize: 11, color: secondary, fontStyle: 'italic' }}>{tmpl.companyTagline}</div>
@@ -312,7 +312,7 @@ const InvoiceDetailPage: React.FC = () => {
                   Dari
                 </div>
                 <Text style={{ fontWeight: 600, fontSize: 14, display: 'block', color: '#263238' }}>
-                  {tmpl.companyName || 'Caritahub Rental'}
+                  {tmpl.companyName || 'CaritaHub Rental'}
                 </Text>
                 <Text style={{ fontSize: 12, color: secondary, display: 'block', lineHeight: 1.6 }}>
                   {tmpl.headerAddress && <>{tmpl.headerAddress}<br /></>}
@@ -498,7 +498,7 @@ const InvoiceDetailPage: React.FC = () => {
             <Divider style={{ margin: '16px 0' }} />
             <div style={{ textAlign: 'center', paddingBottom: 8 }}>
               <Text style={{ fontSize: 13, color: secondary, fontStyle: 'italic' }}>
-                {tmpl.footerText || 'Terima kasih atas kepercayaan Anda menggunakan layanan Caritahub Rental.'}
+                {tmpl.footerText || 'Terima kasih atas kepercayaan Anda menggunakan layanan CaritaHub Rental.'}
               </Text>
               {tmpl.footerNote && (
                 <Text style={{ fontSize: 11, color: '#9ca3af', display: 'block', marginTop: 4 }}>{tmpl.footerNote}</Text>
@@ -522,7 +522,7 @@ const InvoiceDetailPage: React.FC = () => {
                   }}
                 >
                   <Text style={{ fontSize: 11, color: '#bfbfbf' }}>
-                    Powered by <strong style={{ color: '#8c8c8c' }}>Caritahub Rental</strong> &mdash; Upgrade ke Standard untuk menghilangkan watermark
+                    Powered by <strong style={{ color: '#8c8c8c' }}>CaritaHub Rental</strong> &mdash; Upgrade ke Standard untuk menghilangkan watermark
                   </Text>
                 </div>
               );

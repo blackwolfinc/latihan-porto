@@ -534,7 +534,7 @@ model InvoiceTemplate {
   // Bank Account for Payment
   bankName         String?   // e.g. "Bank BCA"
   bankAccountNumber String?  // e.g. "123-456-7890"
-  bankAccountName  String?   // e.g. "PT Caritahub Rental Indonesia"
+  bankAccountName  String?   // e.g. "PT CaritaHub Rental Indonesia"
   bankBranch       String?   // e.g. "KCP Jakarta Pusat"
 
   // Additional bank accounts (JSON array)

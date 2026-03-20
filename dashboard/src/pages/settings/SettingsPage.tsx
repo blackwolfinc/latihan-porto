@@ -65,7 +65,7 @@ const CompanyProfileTab: React.FC = () => {
 
   useEffect(() => {
     form.setFieldsValue({
-      companyName: 'Caritahub Rental',
+      companyName: 'CaritaHub Rental',
       tagline: 'Solusi Rental Kendaraan Terpercaya',
       email: 'info@rentalku.com',
       phone: '021-12345678',
@@ -76,7 +76,7 @@ const CompanyProfileTab: React.FC = () => {
       postalCode: '10110',
       website: 'https://rentalku.com',
       taxId: '12.345.678.9-012.000',
-      description: 'Caritahub Rental adalah perusahaan rental kendaraan yang menyediakan berbagai jenis kendaraan untuk kebutuhan pribadi dan bisnis.',
+      description: 'CaritaHub Rental adalah perusahaan rental kendaraan yang menyediakan berbagai jenis kendaraan untuk kebutuhan pribadi dan bisnis.',
     });
   }, [form]);
 

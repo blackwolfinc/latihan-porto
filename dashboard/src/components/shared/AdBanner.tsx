@@ -56,7 +56,7 @@ const AdBanner: React.FC<AdBannerProps> = ({ plan = 'FREE', placement = 'top' })
         }}
       >
         <Space>
-          <span>Powered by <strong>Caritahub Rental</strong></span>
+          <span>Powered by <strong>CaritaHub Rental</strong></span>
           <span style={{ color: '#8c8c8c' }}>|</span>
           <a onClick={() => navigate('/settings', { state: { tab: 'subscription' } })} style={{ color: '#1677ff', cursor: 'pointer' }}>
             Upgrade untuk menghilangkan iklan
