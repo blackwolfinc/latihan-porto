@@ -4,15 +4,24 @@ import { join, extname } from 'path';
 
 @Injectable()
 export class UploadsService {
-  private readonly uploadDir = join(process.cwd(), 'uploads');
+  private readonly uploadDir: string;
 
   constructor() {
-    const dirs = ['images', 'documents'];
-    for (const dir of dirs) {
-      const dirPath = join(this.uploadDir, dir);
-      if (!existsSync(dirPath)) {
-        mkdirSync(dirPath, { recursive: true });
+    // Use /tmp on serverless (Vercel), otherwise use local uploads dir
+    this.uploadDir = process.env.VERCEL
+      ? join('/tmp', 'uploads')
+      : join(process.cwd(), 'uploads');
+
+    try {
+      const dirs = ['images', 'documents'];
+      for (const dir of dirs) {
+        const dirPath = join(this.uploadDir, dir);
+        if (!existsSync(dirPath)) {
+          mkdirSync(dirPath, { recursive: true });
+        }
       }
+    } catch (err) {
+      console.warn('Could not create upload directories:', err.message);
     }
   }
 
