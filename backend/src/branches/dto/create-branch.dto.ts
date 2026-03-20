@@ -31,4 +31,9 @@ export class CreateBranchDto {
   @IsNumber()
   @IsOptional()
   lng?: number;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  organizationId?: string;
 }
