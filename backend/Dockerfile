@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma/
 
-RUN npm install
+RUN npm ci
 
 COPY . .
 
@@ -23,6 +23,8 @@ COPY --from=builder /app/package*.json ./
 
 RUN mkdir -p uploads/images uploads/documents
 
-EXPOSE 3000
+# Railway assigns PORT automatically
+ENV PORT=3000
+EXPOSE ${PORT}
 
-CMD ["sh", "-c", "npx prisma db push && npm run start:prod"]
+CMD ["sh", "-c", "npx prisma db push && node dist/main"]
