@@ -120,7 +120,8 @@ export enum SaasPlan {
 }
 
 export interface PlanLimits {
-  maxVehicles: number;
+  maxCars: number;
+  maxMotorcycles: number;
   maxBranches: number;
   features: {
     gpsTracking: boolean;

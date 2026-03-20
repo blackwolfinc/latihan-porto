@@ -1,5 +1,6 @@
 export interface PlanLimits {
-  maxVehicles: number;
+  maxCars: number;
+  maxMotorcycles: number;
   maxBranches: number;
   features: {
     gpsTracking: boolean;
@@ -12,7 +13,8 @@ export interface PlanLimits {
 
 export const PLAN_LIMITS: Record<string, PlanLimits> = {
   FREE: {
-    maxVehicles: 10,
+    maxCars: 3,
+    maxMotorcycles: 5,
     maxBranches: 1,
     features: {
       gpsTracking: false,
@@ -23,7 +25,8 @@ export const PLAN_LIMITS: Record<string, PlanLimits> = {
     },
   },
   STANDARD: {
-    maxVehicles: 50,
+    maxCars: 50,
+    maxMotorcycles: 100,
     maxBranches: 3,
     features: {
       gpsTracking: false,
@@ -34,7 +37,8 @@ export const PLAN_LIMITS: Record<string, PlanLimits> = {
     },
   },
   PREMIUM: {
-    maxVehicles: Infinity,
+    maxCars: Infinity,
+    maxMotorcycles: Infinity,
     maxBranches: Infinity,
     features: {
       gpsTracking: true,

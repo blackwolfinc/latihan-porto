@@ -470,7 +470,8 @@ const SubscriptionTab: React.FC = () => {
       price: 'Gratis',
       period: '',
       features: [
-        'Maks. 10 kendaraan',
+        'Maks. 3 mobil',
+        'Maks. 5 motor',
         '1 cabang',
         'Semua fitur dasar',
         'Laporan dasar',
@@ -488,7 +489,8 @@ const SubscriptionTab: React.FC = () => {
       price: 'Rp 499.000',
       period: '/bulan',
       features: [
-        'Maks. 50 kendaraan',
+        'Maks. 50 mobil',
+        'Maks. 100 motor',
         '3 cabang',
         'Semua fitur dasar',
         'Laporan dasar',
@@ -506,7 +508,8 @@ const SubscriptionTab: React.FC = () => {
       price: 'Rp 1.499.000',
       period: '/bulan',
       features: [
-        'Unlimited kendaraan',
+        'Unlimited mobil',
+        'Unlimited motor',
         'Unlimited cabang',
         'Semua fitur lengkap',
         'Laporan lanjutan (revenue, fleet, expense)',

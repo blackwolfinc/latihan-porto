@@ -18,7 +18,8 @@ export class CarsService {
       select: { organizationId: true },
     });
     if (branch?.organizationId) {
-      await this.subscriptionService.checkVehicleLimit(branch.organizationId);
+      const vehicleType = (dto.vehicleType as 'CAR' | 'MOTORCYCLE') || 'CAR';
+      await this.subscriptionService.checkVehicleLimit(branch.organizationId, vehicleType);
     }
 
     return this.prisma.car.create({
@@ -28,6 +29,7 @@ export class CarsService {
         year: dto.year,
         plateNumber: dto.plateNumber,
         color: dto.color,
+        vehicleType: (dto.vehicleType as any) || 'CAR',
         category: dto.category as any,
         branchId: dto.branchId,
         dailyRate: dto.dailyRate,

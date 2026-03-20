@@ -99,6 +99,11 @@ enum FuelType {
   HYBRID
 }
 
+enum VehicleType {
+  CAR
+  MOTORCYCLE
+}
+
 enum BookingStatus {
   PENDING
   CONFIRMED
@@ -197,6 +202,7 @@ model Car {
   year         Int
   plateNumber  String       @unique
   color        String
+  vehicleType  VehicleType  @default(CAR)
   category     CarCategory
   status       CarStatus    @default(AVAILABLE)
   branchId     String

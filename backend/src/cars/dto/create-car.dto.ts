@@ -26,6 +26,11 @@ export class CreateCarDto {
   @IsNotEmpty()
   color: string;
 
+  @ApiProperty({ enum: ['CAR', 'MOTORCYCLE'], default: 'CAR' })
+  @IsEnum(['CAR', 'MOTORCYCLE'])
+  @IsOptional()
+  vehicleType?: string;
+
   @ApiProperty({ enum: ['SEDAN', 'SUV', 'MPV', 'BUS', 'PICKUP', 'VAN', 'LUXURY'] })
   @IsEnum(['SEDAN', 'SUV', 'MPV', 'BUS', 'PICKUP', 'VAN', 'LUXURY'])
   category: string;

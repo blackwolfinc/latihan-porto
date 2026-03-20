@@ -42,7 +42,7 @@ export class SubscriptionService {
     return { plan, limits: PLAN_LIMITS[plan] };
   }
 
-  async checkVehicleLimit(organizationId: string): Promise<void> {
+  async checkVehicleLimit(organizationId: string, vehicleType: 'CAR' | 'MOTORCYCLE' = 'CAR'): Promise<void> {
     const org = await this.prisma.organization.findUnique({
       where: { id: organizationId },
       select: { plan: true },
@@ -51,18 +51,22 @@ export class SubscriptionService {
     if (!org) throw new NotFoundException('Organization not found');
 
     const limits = PLAN_LIMITS[org.plan];
-    if (limits.maxVehicles === Infinity) return;
+    const maxLimit = vehicleType === 'CAR' ? limits.maxCars : limits.maxMotorcycles;
+    if (maxLimit === Infinity) return;
 
     const count = await this.prisma.car.count({
       where: {
         branch: { organizationId },
+        vehicleType,
         isActive: true,
       },
     });
 
-    if (count >= limits.maxVehicles) {
+    const label = vehicleType === 'CAR' ? 'mobil' : 'motor';
+
+    if (count >= maxLimit) {
       throw new ForbiddenException(
-        `Paket ${org.plan} hanya mendukung maksimal ${limits.maxVehicles} kendaraan. Upgrade paket Anda untuk menambah lebih banyak kendaraan.`,
+        `Paket ${org.plan} hanya mendukung maksimal ${maxLimit} ${label}. Upgrade paket Anda untuk menambah lebih banyak ${label}.`,
       );
     }
   }
@@ -116,9 +120,12 @@ export class SubscriptionService {
 
     if (!org) throw new NotFoundException('Organization not found');
 
-    const [vehicleCount, branchCount] = await Promise.all([
+    const [carCount, motorcycleCount, branchCount] = await Promise.all([
       this.prisma.car.count({
-        where: { branch: { organizationId }, isActive: true },
+        where: { branch: { organizationId }, vehicleType: 'CAR', isActive: true },
+      }),
+      this.prisma.car.count({
+        where: { branch: { organizationId }, vehicleType: 'MOTORCYCLE', isActive: true },
       }),
       this.prisma.branch.count({
         where: { organizationId, isActive: true },
@@ -131,7 +138,8 @@ export class SubscriptionService {
       plan: org.plan,
       limits,
       usage: {
-        vehicles: vehicleCount,
+        cars: carCount,
+        motorcycles: motorcycleCount,
         branches: branchCount,
       },
     };
