@@ -1,13 +1,26 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
+import { SubscriptionService } from '../subscription/subscription.service';
 import { CreateCarDto } from './dto/create-car.dto';
 import { UpdateCarDto } from './dto/update-car.dto';
 
 @Injectable()
 export class CarsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private subscriptionService: SubscriptionService,
+  ) {}
 
   async create(dto: CreateCarDto) {
+    // Check vehicle limit based on plan
+    const branch = await this.prisma.branch.findUnique({
+      where: { id: dto.branchId },
+      select: { organizationId: true },
+    });
+    if (branch?.organizationId) {
+      await this.subscriptionService.checkVehicleLimit(branch.organizationId);
+    }
+
     return this.prisma.car.create({
       data: {
         brand: dto.brand,

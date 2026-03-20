@@ -53,6 +53,7 @@ export class OrganizationsService {
       where: { id },
       include: {
         branches: true,
+        subscription: true,
         _count: { select: { users: true, branches: true, invoices: true } },
       },
     });

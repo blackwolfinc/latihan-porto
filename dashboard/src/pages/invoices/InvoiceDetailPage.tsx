@@ -224,9 +224,37 @@ const InvoiceDetailPage: React.FC = () => {
           borderRadius: 10,
           boxShadow: '0 2px 16px rgba(0,0,0,0.08)',
           border: '1px solid #e0e0e0',
+          position: 'relative',
+          overflow: 'hidden',
         }}
         styles={{ body: { padding: '48px 48px 36px' } }}
       >
+        {/* FREE plan watermark */}
+        {(() => {
+          const plan = 'FREE'; // TODO: get from auth store
+          if (plan !== 'FREE') return null;
+          return (
+            <div
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%) rotate(-30deg)',
+                fontSize: 60,
+                fontWeight: 900,
+                color: 'rgba(0,0,0,0.04)',
+                whiteSpace: 'nowrap',
+                pointerEvents: 'none',
+                zIndex: 1,
+                letterSpacing: 8,
+                userSelect: 'none',
+              }}
+            >
+              CARITAHUB RENTAL
+            </div>
+          );
+        })()}
+
         {loadingTemplate ? (
           <div style={{ textAlign: 'center', padding: 40 }}><Spin /></div>
         ) : (
@@ -479,6 +507,26 @@ const InvoiceDetailPage: React.FC = () => {
                 <Text style={{ fontSize: 11, color: primary, display: 'block', marginTop: 4 }}>{tmpl.headerWebsite}</Text>
               )}
             </div>
+
+            {/* FREE plan branding watermark footer */}
+            {(() => {
+              const plan = 'FREE'; // TODO: get from auth store
+              if (plan !== 'FREE') return null;
+              return (
+                <div
+                  style={{
+                    textAlign: 'center',
+                    padding: '12px 0 4px',
+                    borderTop: '1px dashed #d9d9d9',
+                    marginTop: 12,
+                  }}
+                >
+                  <Text style={{ fontSize: 11, color: '#bfbfbf' }}>
+                    Powered by <strong style={{ color: '#8c8c8c' }}>Caritahub Rental</strong> &mdash; Upgrade ke Standard untuk menghilangkan watermark
+                  </Text>
+                </div>
+              );
+            })()}
           </>
         )}
       </Card>

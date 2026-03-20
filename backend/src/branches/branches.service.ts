@@ -1,13 +1,20 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
+import { SubscriptionService } from '../subscription/subscription.service';
 import { CreateBranchDto } from './dto/create-branch.dto';
 import { UpdateBranchDto } from './dto/update-branch.dto';
 
 @Injectable()
 export class BranchesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private subscriptionService: SubscriptionService,
+  ) {}
 
   async create(dto: CreateBranchDto) {
+    if (dto.organizationId) {
+      await this.subscriptionService.checkBranchLimit(dto.organizationId);
+    }
     return this.prisma.branch.create({ data: dto });
   }
 

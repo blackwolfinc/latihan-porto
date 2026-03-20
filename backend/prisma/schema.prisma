@@ -19,7 +19,7 @@ model Organization {
   email       String?
   website     String?
   taxId       String?  // NPWP
-  plan        SaasPlan @default(STARTER)
+  plan        SaasPlan @default(FREE)
   isActive    Boolean  @default(true)
   trialEndsAt DateTime?
   createdAt   DateTime @default(now())
@@ -29,14 +29,37 @@ model Organization {
   users       User[]
   invoices    Invoice[]
   invoiceTemplate InvoiceTemplate?
+  subscription Subscription?
 
   @@map("organizations")
 }
 
+model Subscription {
+  id               String   @id @default(cuid())
+  organizationId   String   @unique
+  organization     Organization @relation(fields: [organizationId], references: [id])
+  plan             SaasPlan @default(FREE)
+  status           SubscriptionStatus @default(ACTIVE)
+  currentPeriodStart DateTime @default(now())
+  currentPeriodEnd   DateTime?
+  cancelledAt      DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("subscriptions")
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  TRIALING
+}
+
 enum SaasPlan {
-  STARTER
-  PROFESSIONAL
-  ENTERPRISE
+  FREE
+  STANDARD
+  PREMIUM
 }
 
 enum Role {

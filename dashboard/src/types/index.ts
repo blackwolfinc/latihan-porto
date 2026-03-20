@@ -113,6 +113,33 @@ export enum DocumentType {
   OTHER = 'OTHER',
 }
 
+export enum SaasPlan {
+  FREE = 'FREE',
+  STANDARD = 'STANDARD',
+  PREMIUM = 'PREMIUM',
+}
+
+export interface PlanLimits {
+  maxVehicles: number;
+  maxBranches: number;
+  features: {
+    gpsTracking: boolean;
+    advancedReports: boolean;
+    automation: boolean;
+    removeAds: boolean;
+    removeWatermark: boolean;
+  };
+}
+
+export interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  plan: SaasPlan;
+  logo?: string;
+  isActive: boolean;
+}
+
 // ========== INTERFACES ==========
 
 export interface User {
@@ -124,6 +151,8 @@ export interface User {
   role: Role;
   branchId?: string;
   branch?: Branch;
+  organizationId?: string;
+  organization?: Organization;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

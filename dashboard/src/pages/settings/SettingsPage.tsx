@@ -461,92 +461,134 @@ const NotificationSettingsTab: React.FC = () => {
 
 // Subscription Tab
 const SubscriptionTab: React.FC = () => {
-  const [currentPlan] = useState('PROFESSIONAL');
+  const [currentPlan] = useState('FREE');
 
   const plans = [
     {
-      key: 'STARTER',
-      name: 'Starter',
-      price: 'Rp 299.000',
-      period: '/bulan',
-      features: ['Maks. 10 mobil', '1 cabang', '2 user', 'Laporan dasar', 'Email support'],
+      key: 'FREE',
+      name: 'Free',
+      price: 'Gratis',
+      period: '',
+      features: [
+        'Maks. 10 kendaraan',
+        '1 cabang',
+        'Semua fitur dasar',
+        'Laporan dasar',
+        'Email support',
+      ],
+      limitations: [
+        'Iklan banner di dashboard',
+        'Watermark di invoice & kontrak',
+      ],
       color: '#8c8c8c',
     },
     {
-      key: 'PROFESSIONAL',
-      name: 'Professional',
-      price: 'Rp 799.000',
+      key: 'STANDARD',
+      name: 'Standard',
+      price: 'Rp 499.000',
       period: '/bulan',
-      features: ['Maks. 50 mobil', '5 cabang', '10 user', 'Laporan lengkap', 'GPS tracking', 'Priority support'],
+      features: [
+        'Maks. 50 kendaraan',
+        '3 cabang',
+        'Semua fitur dasar',
+        'Laporan dasar',
+        'Tanpa iklan',
+        'Tanpa watermark',
+        'Priority support',
+      ],
+      limitations: [],
       color: '#1677ff',
       recommended: true,
     },
     {
-      key: 'ENTERPRISE',
-      name: 'Enterprise',
-      price: 'Rp 1.999.000',
+      key: 'PREMIUM',
+      name: 'Premium',
+      price: 'Rp 1.499.000',
       period: '/bulan',
-      features: ['Unlimited mobil', 'Unlimited cabang', 'Unlimited user', 'Semua fitur', 'API access', 'Dedicated support', 'Custom branding'],
+      features: [
+        'Unlimited kendaraan',
+        'Unlimited cabang',
+        'Semua fitur lengkap',
+        'Laporan lanjutan (revenue, fleet, expense)',
+        'GPS tracking real-time',
+        'Automasi operasional',
+        'Tanpa iklan',
+        'Tanpa watermark',
+        'Dedicated support',
+      ],
+      limitations: [],
       color: '#722ed1',
     },
   ];
+
+  const planOrder = ['FREE', 'STANDARD', 'PREMIUM'];
+  const currentIndex = planOrder.indexOf(currentPlan);
 
   return (
     <div>
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
         <h3 style={{ marginBottom: 4 }}>Paket Langganan Anda</h3>
-        <Tag color="blue" style={{ fontSize: 14, padding: '4px 16px' }}>
+        <Tag color={plans.find((p) => p.key === currentPlan)?.color} style={{ fontSize: 14, padding: '4px 16px' }}>
           {plans.find((p) => p.key === currentPlan)?.name || currentPlan}
         </Tag>
       </div>
       <Row gutter={[16, 16]} justify="center">
-        {plans.map((plan) => (
-          <Col key={plan.key} xs={24} md={8}>
-            <Card
-              hoverable
-              style={{
-                height: '100%',
-                borderColor: plan.key === currentPlan ? plan.color : undefined,
-                borderWidth: plan.key === currentPlan ? 2 : 1,
-              }}
-            >
-              {plan.recommended && (
-                <Tag color="blue" style={{ position: 'absolute', top: 12, right: 12, fontSize: 11 }}>
-                  Rekomendasi
-                </Tag>
-              )}
-              <div style={{ textAlign: 'center', marginBottom: 16 }}>
-                <h3 style={{ color: plan.color, marginBottom: 4 }}>{plan.name}</h3>
-                <span style={{ fontSize: 28, fontWeight: 700, color: plan.color }}>{plan.price}</span>
-                <span style={{ color: '#8c8c8c' }}>{plan.period}</span>
-              </div>
-              <Divider />
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {plan.features.map((f, i) => (
-                  <li key={i} style={{ padding: '6px 0', fontSize: 13 }}>
-                    <span style={{ color: '#52c41a', marginRight: 8 }}>&#10003;</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <div style={{ marginTop: 20, textAlign: 'center' }}>
-                {plan.key === currentPlan ? (
-                  <Button disabled block>
-                    Paket Saat Ini
-                  </Button>
-                ) : (
-                  <Button
-                    type={plan.key === 'ENTERPRISE' ? 'primary' : 'default'}
-                    block
-                    onClick={() => message.info(`Hubungi sales untuk upgrade ke paket ${plan.name}`)}
-                  >
-                    {plan.key === 'STARTER' ? 'Downgrade' : 'Upgrade'}
-                  </Button>
+        {plans.map((plan) => {
+          const planIndex = planOrder.indexOf(plan.key);
+          return (
+            <Col key={plan.key} xs={24} md={8}>
+              <Card
+                hoverable
+                style={{
+                  height: '100%',
+                  borderColor: plan.key === currentPlan ? plan.color : undefined,
+                  borderWidth: plan.key === currentPlan ? 2 : 1,
+                }}
+              >
+                {plan.recommended && (
+                  <Tag color="blue" style={{ position: 'absolute', top: 12, right: 12, fontSize: 11 }}>
+                    Rekomendasi
+                  </Tag>
                 )}
-              </div>
-            </Card>
-          </Col>
-        ))}
+                <div style={{ textAlign: 'center', marginBottom: 16 }}>
+                  <h3 style={{ color: plan.color, marginBottom: 4 }}>{plan.name}</h3>
+                  <span style={{ fontSize: 28, fontWeight: 700, color: plan.color }}>{plan.price}</span>
+                  {plan.period && <span style={{ color: '#8c8c8c' }}>{plan.period}</span>}
+                </div>
+                <Divider />
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {plan.features.map((f, i) => (
+                    <li key={i} style={{ padding: '6px 0', fontSize: 13 }}>
+                      <span style={{ color: '#52c41a', marginRight: 8 }}>&#10003;</span>
+                      {f}
+                    </li>
+                  ))}
+                  {plan.limitations.map((f, i) => (
+                    <li key={`lim-${i}`} style={{ padding: '6px 0', fontSize: 13, color: '#ff4d4f' }}>
+                      <span style={{ marginRight: 8 }}>&#10007;</span>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <div style={{ marginTop: 20, textAlign: 'center' }}>
+                  {plan.key === currentPlan ? (
+                    <Button disabled block>
+                      Paket Saat Ini
+                    </Button>
+                  ) : (
+                    <Button
+                      type={planIndex > currentIndex ? 'primary' : 'default'}
+                      block
+                      onClick={() => message.info(`Hubungi sales untuk ${planIndex > currentIndex ? 'upgrade' : 'downgrade'} ke paket ${plan.name}`)}
+                    >
+                      {planIndex > currentIndex ? 'Upgrade' : 'Downgrade'}
+                    </Button>
+                  )}
+                </div>
+              </Card>
+            </Col>
+          );
+        })}
       </Row>
     </div>
   );

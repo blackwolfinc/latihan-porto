@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Menu, Avatar, Dropdown, Badge, Space, Typography, Select, theme } from 'antd';
+import { Layout, Menu, Avatar, Dropdown, Badge, Space, Typography, Select, Tag, theme } from 'antd';
 import {
   DashboardOutlined,
   CarOutlined,
@@ -24,16 +24,22 @@ import {
   GlobalOutlined,
   SafetyCertificateOutlined,
   StopOutlined,
+  CrownOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth.store';
 import { t, LANGUAGES, Language } from '@/i18n';
 import { useLanguageStore } from '@/stores/language.store';
+import AdBanner from '@/components/shared/AdBanner';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
 
-const getMenuItems = () => [
+const premiumLabel = (text: string) => (
+  <span>{text} <CrownOutlined style={{ color: '#faad14', fontSize: 11 }} /></span>
+);
+
+const getMenuItems = (plan?: string) => [
   { key: '/operational', icon: <DashboardOutlined />, label: t('nav.operational') },
   { key: '/dashboard', icon: <BarChartOutlined />, label: t('nav.dashboard') },
   { key: '/cars', icon: <CarOutlined />, label: t('nav.cars') },
@@ -47,12 +53,12 @@ const getMenuItems = () => [
   { key: '/payments', icon: <CreditCardOutlined />, label: t('nav.payments') },
   { key: '/maintenance', icon: <ToolOutlined />, label: t('nav.maintenance') },
   { key: '/fuel', icon: <DollarOutlined />, label: t('nav.fuel') },
-  { key: '/gps', icon: <EnvironmentOutlined />, label: t('nav.gps') },
+  { key: '/gps', icon: <EnvironmentOutlined />, label: plan !== 'PREMIUM' ? premiumLabel(t('nav.gps')) : t('nav.gps') },
   { key: '/inspections', icon: <FileSearchOutlined />, label: t('nav.inspections') },
   { key: '/contracts', icon: <FileTextOutlined />, label: t('nav.contracts') },
   { key: '/reviews', icon: <StarOutlined />, label: t('nav.reviews') },
   { key: '/branches', icon: <BankOutlined />, label: t('nav.branches') },
-  { key: '/reports', icon: <BarChartOutlined />, label: t('nav.reports') },
+  { key: '/reports', icon: <BarChartOutlined />, label: plan !== 'PREMIUM' ? premiumLabel(t('nav.reports')) : t('nav.reports') },
   { key: '/settings', icon: <SettingOutlined />, label: t('nav.settings') },
 ];
 
@@ -65,7 +71,8 @@ const DashboardLayout: React.FC = () => {
   const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
 
   const selectedKey = '/' + (location.pathname.split('/')[1] || '');
-  const menuItems = getMenuItems();
+  const currentPlan = (user as any)?.organization?.plan || 'FREE';
+  const menuItems = getMenuItems(currentPlan);
 
   const handleMenuClick = ({ key }: { key: string }) => {
     navigate(key);
@@ -178,6 +185,7 @@ const DashboardLayout: React.FC = () => {
           borderRadius: borderRadiusLG,
           minHeight: 280,
         }}>
+          <AdBanner plan={currentPlan} placement="top" />
           <Outlet />
         </Content>
       </Layout>

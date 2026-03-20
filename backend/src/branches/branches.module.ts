@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { BranchesService } from './branches.service';
 import { BranchesController } from './branches.controller';
+import { SubscriptionModule } from '../subscription/subscription.module';
 
 @Module({
+  imports: [SubscriptionModule],
   controllers: [BranchesController],
   providers: [BranchesService],
   exports: [BranchesService],

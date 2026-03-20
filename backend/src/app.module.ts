@@ -26,6 +26,7 @@ import { ComplianceModule } from './compliance/compliance.module';
 import { VerificationModule } from './verification/verification.module';
 import { InvoiceTemplatesModule } from './invoice-templates/invoice-templates.module';
 import { SeedModule } from './seed/seed.module';
+import { SubscriptionModule } from './subscription/subscription.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { SeedModule } from './seed/seed.module';
     VerificationModule,
     InvoiceTemplatesModule,
     SeedModule,
+    SubscriptionModule,
   ],
 })
 export class AppModule {}

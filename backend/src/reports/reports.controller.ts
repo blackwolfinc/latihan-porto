@@ -1,7 +1,9 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { ReportsService } from './reports.service';
 import { Roles } from '../common/decorators/roles.decorator';
+import { RequireFeature } from '../common/decorators/plan-feature.decorator';
+import { PlanFeatureGuard } from '../common/guards/plan-feature.guard';
 
 @ApiTags('Reports')
 @ApiBearerAuth()
@@ -17,7 +19,9 @@ export class ReportsController {
   }
 
   @Get('revenue')
-  @ApiOperation({ summary: 'Get revenue report by date range' })
+  @UseGuards(PlanFeatureGuard)
+  @RequireFeature('advancedReports')
+  @ApiOperation({ summary: 'Get revenue report by date range (Premium only)' })
   @ApiQuery({ name: 'startDate', required: true, example: '2024-01-01' })
   @ApiQuery({ name: 'endDate', required: true, example: '2024-12-31' })
   @ApiQuery({ name: 'branchId', required: false })
@@ -30,14 +34,18 @@ export class ReportsController {
   }
 
   @Get('fleet-utilization')
-  @ApiOperation({ summary: 'Get fleet utilization stats' })
+  @UseGuards(PlanFeatureGuard)
+  @RequireFeature('advancedReports')
+  @ApiOperation({ summary: 'Get fleet utilization stats (Premium only)' })
   @ApiQuery({ name: 'branchId', required: false })
   getFleetUtilization(@Query('branchId') branchId?: string) {
     return this.reportsService.getFleetUtilization(branchId);
   }
 
   @Get('expenses')
-  @ApiOperation({ summary: 'Get expenses report' })
+  @UseGuards(PlanFeatureGuard)
+  @RequireFeature('advancedReports')
+  @ApiOperation({ summary: 'Get expenses report (Premium only)' })
   @ApiQuery({ name: 'startDate', required: true, example: '2024-01-01' })
   @ApiQuery({ name: 'endDate', required: true, example: '2024-12-31' })
   @ApiQuery({ name: 'branchId', required: false })

@@ -1,10 +1,14 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { GpsService } from './gps.service';
 import { Roles } from '../common/decorators/roles.decorator';
+import { RequireFeature } from '../common/decorators/plan-feature.decorator';
+import { PlanFeatureGuard } from '../common/guards/plan-feature.guard';
 
 @ApiTags('GPS')
 @ApiBearerAuth()
+@UseGuards(PlanFeatureGuard)
+@RequireFeature('gpsTracking')
 @Controller('gps')
 export class GpsController {
   constructor(private readonly gpsService: GpsService) {}
