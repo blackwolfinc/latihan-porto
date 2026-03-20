@@ -34,8 +34,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  // Railway provides PORT env var automatically
-  const port = process.env.PORT || process.env.APP_PORT || 3000;
+  const port = process.env.PORT || 3000;
   await app.listen(port, '0.0.0.0');
   console.log(`Server running on port ${port}`);
   console.log(`Swagger docs at /api/docs`);

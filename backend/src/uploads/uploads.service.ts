@@ -7,10 +7,7 @@ export class UploadsService {
   private readonly uploadDir: string;
 
   constructor() {
-    // Use /tmp on serverless (Vercel), otherwise use local uploads dir
-    this.uploadDir = process.env.VERCEL
-      ? join('/tmp', 'uploads')
-      : join(process.cwd(), 'uploads');
+    this.uploadDir = join(process.cwd(), 'uploads');
 
     try {
       const dirs = ['images', 'documents'];
