@@ -49,7 +49,7 @@ export class SeedController {
         name: 'Caritahub Rental', slug: 'caritahub-rental',
         address: 'Jl. Sudirman No. 1, Jakarta Pusat', city: 'Jakarta',
         phone: '021-5551234', email: 'info@caritahub.com',
-        plan: 'PROFESSIONAL', isActive: true,
+        plan: 'STANDARD', isActive: true,
       },
     });
 

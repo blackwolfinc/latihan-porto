@@ -40,7 +40,7 @@ async function main() {
       email: 'info@caritahub.com',
       website: 'https://caritahub.com',
       taxId: '01.234.567.8-012.000',
-      plan: 'PROFESSIONAL',
+      plan: 'STANDARD',
       isActive: true,
     },
   });
