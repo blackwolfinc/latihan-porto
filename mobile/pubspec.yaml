@@ -21,7 +21,7 @@ dependencies:
   cached_network_image: ^3.3.1
   flutter_secure_storage: ^9.0.0
   webview_flutter: ^4.5.0
-  signature_pad_widget: ^3.0.1
+  hand_signature: ^3.0.2
   shimmer: ^3.0.0
   pull_to_refresh: ^2.0.0
   badges: ^3.1.2

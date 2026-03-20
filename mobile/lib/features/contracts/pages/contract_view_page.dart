@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:signature_pad_widget/signature_pad_widget.dart';
+import 'package:hand_signature/signature.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/constants/app_constants.dart';
@@ -21,7 +21,11 @@ class _ContractViewPageState extends State<ContractViewPage> {
   Contract? _contract;
   bool _isLoading = true;
   bool _isSigning = false;
-  final GlobalKey<SignaturePadState> _signaturePadKey = GlobalKey<SignaturePadState>();
+  final HandSignatureControl _signatureControl = HandSignatureControl(
+    threshold: 3.0,
+    smoothRatio: 0.65,
+    velocityRange: 2.0,
+  );
 
   @override
   void initState() {
@@ -43,11 +47,7 @@ class _ContractViewPageState extends State<ContractViewPage> {
   }
 
   Future<void> _signContract() async {
-    final signaturePadState = _signaturePadKey.currentState;
-    if (signaturePadState == null) return;
-
-    final signatureData = signaturePadState.toImage();
-    if (signatureData == null) {
+    if (_signatureControl.isFilled == false) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Silakan tanda tangan terlebih dahulu')),
       );
@@ -200,11 +200,12 @@ class _ContractViewPageState extends State<ContractViewPage> {
                             borderRadius: BorderRadius.circular(AppSizes.radiusMD),
                             border: Border.all(color: AppColors.divider),
                           ),
-                          child: SignaturePadWidget(
-                            key: _signaturePadKey,
-                            penColor: Colors.black,
-                            penMinWidth: 2.0,
-                            penMaxWidth: 4.0,
+                          child: HandSignature(
+                            control: _signatureControl,
+                            color: Colors.black,
+                            width: 2.0,
+                            maxWidth: 4.0,
+                            type: SignatureDrawType.shape,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -212,7 +213,7 @@ class _ContractViewPageState extends State<ContractViewPage> {
                           alignment: Alignment.centerRight,
                           child: TextButton.icon(
                             onPressed: () {
-                              _signaturePadKey.currentState?.clear();
+                              _signatureControl.clear();
                             },
                             icon: const Icon(Icons.refresh, size: 18),
                             label: const Text('Hapus Tanda Tangan'),

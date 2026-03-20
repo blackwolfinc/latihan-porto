@@ -44,7 +44,7 @@ class LocationService {
 
   Stream<Position> getPositionStream({
     int intervalMs = 5000,
-    double distanceFilter = 10.0,
+    int distanceFilter = 10,
   }) {
     return Geolocator.getPositionStream(
       locationSettings: LocationSettings(

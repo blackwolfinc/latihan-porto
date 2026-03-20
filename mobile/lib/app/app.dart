@@ -4,6 +4,7 @@ import 'routes.dart';
 import 'theme.dart';
 import '../core/api/api_client.dart';
 import '../features/auth/bloc/auth_bloc.dart';
+import '../features/auth/bloc/auth_event.dart';
 
 class RentalApp extends StatelessWidget {
   const RentalApp({super.key});

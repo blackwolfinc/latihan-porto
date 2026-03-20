@@ -181,7 +181,7 @@ class _InvoiceListPageState extends State<InvoiceListPage>
         ),
         bottom: TabBar(
           controller: _tabController,
-          onChanged: (_) => setState(() {}),
+          onTap: (_) => setState(() {}),
           labelColor: AppColors.primary,
           unselectedLabelColor: AppColors.textSecondary,
           indicatorColor: AppColors.primary,
