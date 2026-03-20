@@ -489,8 +489,8 @@ const SubscriptionTab: React.FC = () => {
       price: 'Rp 499.000',
       period: '/bulan',
       features: [
-        'Maks. 50 mobil',
-        'Maks. 100 motor',
+        'Maks. 25 mobil',
+        'Maks. 40 motor',
         '3 cabang',
         'Semua fitur dasar',
         'Laporan dasar',

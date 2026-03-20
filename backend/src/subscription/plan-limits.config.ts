@@ -25,8 +25,8 @@ export const PLAN_LIMITS: Record<string, PlanLimits> = {
     },
   },
   STANDARD: {
-    maxCars: 50,
-    maxMotorcycles: 100,
+    maxCars: 25,
+    maxMotorcycles: 40,
     maxBranches: 3,
     features: {
       gpsTracking: false,
