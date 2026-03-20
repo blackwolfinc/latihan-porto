@@ -25,6 +25,7 @@ import { AutomationModule } from './automation/automation.module';
 import { ComplianceModule } from './compliance/compliance.module';
 import { VerificationModule } from './verification/verification.module';
 import { InvoiceTemplatesModule } from './invoice-templates/invoice-templates.module';
+import { SeedModule } from './seed/seed.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { InvoiceTemplatesModule } from './invoice-templates/invoice-templates.mo
     ComplianceModule,
     VerificationModule,
     InvoiceTemplatesModule,
+    SeedModule,
   ],
 })
 export class AppModule {}
