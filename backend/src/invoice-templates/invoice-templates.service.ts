@@ -13,14 +13,20 @@ export class InvoiceTemplatesService {
   }
 
   async createOrUpdate(organizationId: string, dto: UpdateInvoiceTemplateDto) {
-    const { companyName, ...rest } = dto;
+    const { companyName, additionalBanks, ...rest } = dto;
+    const data = {
+      ...rest,
+      companyName,
+      ...(additionalBanks !== undefined ? { additionalBanks: additionalBanks as any } : {}),
+    };
     return this.prisma.invoiceTemplate.upsert({
       where: { organizationId },
-      update: dto,
+      update: data,
       create: {
         organizationId,
         companyName: companyName || 'My Company',
         ...rest,
+        ...(additionalBanks !== undefined ? { additionalBanks: additionalBanks as any } : {}),
       },
     });
   }

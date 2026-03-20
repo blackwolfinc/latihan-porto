@@ -51,7 +51,7 @@ export class VerificationService {
   async checkBlacklist(ktpNumber?: string, simNumber?: string) {
     if (!ktpNumber && !simNumber) return null;
 
-    const conditions = [];
+    const conditions: any[] = [];
     if (ktpNumber) conditions.push({ ktpNumber, isActive: true });
     if (simNumber) conditions.push({ simNumber, isActive: true });
 
