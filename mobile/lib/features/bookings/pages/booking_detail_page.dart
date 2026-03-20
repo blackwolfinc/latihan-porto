@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/responsive.dart';
+import '../../../shared/models/booking.dart';
 import '../../../shared/widgets/status_badge.dart';
 import '../bloc/booking_bloc.dart';
 import '../bloc/booking_event.dart';
@@ -141,7 +142,7 @@ class _BookingDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildCarInfoCard(BuildContext context, dynamic booking) {
+  Widget _buildCarInfoCard(BuildContext context, Booking booking) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSizes.paddingMD),
@@ -187,7 +188,7 @@ class _BookingDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildDatesCard(BuildContext context, dynamic booking, DateFormat dateFormat) {
+  Widget _buildDatesCard(BuildContext context, Booking booking, DateFormat dateFormat) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSizes.paddingMD),
@@ -218,7 +219,7 @@ class _BookingDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildDriverCard(BuildContext context, dynamic booking) {
+  Widget _buildDriverCard(BuildContext context, Booking booking) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSizes.paddingMD),
@@ -270,7 +271,7 @@ class _BookingDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildPaymentCard(BuildContext context, dynamic booking) {
+  Widget _buildPaymentCard(BuildContext context, Booking booking) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSizes.paddingMD),
@@ -290,9 +291,7 @@ class _BookingDetailView extends StatelessWidget {
                 const Text('Status'),
                 StatusBadge(
                   label: PaymentStatus.label(booking.paymentStatus),
-                  color: booking.paymentStatus == 'PAID'
-                      ? AppColors.success
-                      : AppColors.warning,
+                  color: PaymentStatus.color(booking.paymentStatus),
                 ),
               ],
             ),
@@ -317,13 +316,13 @@ class _BookingDetailView extends StatelessWidget {
   }
 
   Widget _buildStatusTimeline(BuildContext context, String currentStatus) {
-    final statuses = ['PENDING', 'CONFIRMED', 'ACTIVE', 'COMPLETED'];
+    final statuses = [BookingStatus.pending, BookingStatus.confirmed, BookingStatus.active, BookingStatus.completed];
     final labels = ['Menunggu', 'Dikonfirmasi', 'Aktif', 'Selesai'];
     final currentIndex = statuses.indexOf(currentStatus);
 
     return Row(
       children: List.generate(statuses.length, (index) {
-        final isCompleted = index <= currentIndex && currentStatus != 'CANCELLED';
+        final isCompleted = index <= currentIndex && currentStatus != BookingStatus.cancelled;
         final isCurrent = index == currentIndex;
         return Expanded(
           child: Column(
@@ -394,7 +393,7 @@ class _BookingDetailView extends StatelessWidget {
 
   List<Widget> _buildActionButtons(BuildContext context, String status, String id) {
     switch (status) {
-      case 'PENDING':
+      case BookingStatus.pending:
         return [
           ElevatedButton.icon(
             onPressed: () => context.push('/payment/$id'),
@@ -409,7 +408,7 @@ class _BookingDetailView extends StatelessWidget {
             style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.error)),
           ),
         ];
-      case 'CONFIRMED':
+      case BookingStatus.confirmed:
         return [
           ElevatedButton.icon(
             onPressed: () => context.push('/contract/$id'),
@@ -417,7 +416,7 @@ class _BookingDetailView extends StatelessWidget {
             label: const Text('Lihat Kontrak'),
           ),
         ];
-      case 'ACTIVE':
+      case BookingStatus.active:
         return [
           ElevatedButton.icon(
             onPressed: () => context.push('/tracking/$id'),
@@ -431,7 +430,7 @@ class _BookingDetailView extends StatelessWidget {
             label: const Text('Inspeksi'),
           ),
         ];
-      case 'COMPLETED':
+      case BookingStatus.completed:
         return [
           ElevatedButton.icon(
             onPressed: () => context.push('/review/$id'),

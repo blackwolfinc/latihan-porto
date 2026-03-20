@@ -140,8 +140,7 @@ class CarCard extends StatelessWidget {
   }
 
   Widget _buildCompactCard(BuildContext context) {
-    return SizedBox(
-      child: Card(
+    return Card(
         margin: const EdgeInsets.only(right: 12),
         child: InkWell(
           onTap: onTap,
@@ -200,7 +199,6 @@ class CarCard extends StatelessWidget {
             ],
           ),
         ),
-      ),
     );
   }
 

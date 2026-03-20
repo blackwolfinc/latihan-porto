@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:badges/badges.dart' as badges;
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/responsive.dart';
 import '../../../shared/models/car.dart';
+import '../../../shared/widgets/bottom_nav_bar.dart';
 import '../../../shared/widgets/car_card.dart';
+import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/loading_shimmer.dart';
 import '../../cars/bloc/car_bloc.dart';
 import '../../cars/bloc/car_event.dart';
@@ -49,17 +50,12 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: [
-          _buildHomeContent(),
-          _buildBookingsTab(),
-          _buildNotificationsTab(),
-          _buildProfileTab(),
-        ],
+        children: _buildTabPages(),
       ),
-      bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: BottomNavBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
-        items: _navItems,
+        notificationCount: 3,
       ),
     );
   }
@@ -85,7 +81,7 @@ class _HomePageState extends State<HomePage> {
               NavigationRailDestination(
                 icon: Icon(Icons.receipt_long_outlined),
                 selectedIcon: Icon(Icons.receipt_long),
-                label: Text('Pemesanan'),
+                label: Text('Booking'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.notifications_outlined),
@@ -103,12 +99,7 @@ class _HomePageState extends State<HomePage> {
           Expanded(
             child: IndexedStack(
               index: _currentIndex,
-              children: [
-                _buildHomeContent(),
-                _buildBookingsTab(),
-                _buildNotificationsTab(),
-                _buildProfileTab(),
-              ],
+              children: _buildTabPages(),
             ),
           ),
         ],
@@ -116,38 +107,35 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  List<BottomNavigationBarItem> get _navItems => [
-        const BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          activeIcon: Icon(Icons.home),
-          label: 'Beranda',
-        ),
-        const BottomNavigationBarItem(
-          icon: Icon(Icons.receipt_long_outlined),
-          activeIcon: Icon(Icons.receipt_long),
-          label: 'Pemesanan',
-        ),
-        BottomNavigationBarItem(
-          icon: badges.Badge(
-            badgeContent: const Text(
-              '3',
-              style: TextStyle(color: Colors.white, fontSize: 10),
-            ),
-            child: const Icon(Icons.notifications_outlined),
-          ),
-          activeIcon: const Icon(Icons.notifications),
-          label: 'Notifikasi',
-        ),
-        const BottomNavigationBarItem(
-          icon: Icon(Icons.person_outlined),
-          activeIcon: Icon(Icons.person),
-          label: 'Profil',
-        ),
+  List<Widget> _buildTabPages() => [
+        _buildHomeContent(),
+        _buildPlaceholderTab(Icons.receipt_long_outlined, 'Pemesanan Anda', 'Lihat Pemesanan', '/my-bookings'),
+        _buildPlaceholderTab(Icons.notifications_outlined, 'Notifikasi', 'Lihat Notifikasi', '/notifications'),
+        _buildPlaceholderTab(Icons.person_outlined, 'Profil Anda', 'Lihat Profil', '/profile'),
       ];
+
+  Widget _buildPlaceholderTab(IconData icon, String title, String buttonLabel, String route) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 64, color: Colors.grey),
+          const SizedBox(height: 16),
+          Text(title),
+          const SizedBox(height: 8),
+          ElevatedButton(
+            onPressed: () => context.push(route),
+            child: Text(buttonLabel),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildHomeContent() {
     final isTabletDevice = isTablet(context);
     final hPadding = responsiveHorizontalPadding(context);
+    final gridCount = responsiveGridCount(context, mobile: 1, tablet: 2, desktop: 3);
 
     return SafeArea(
       child: CustomScrollView(
@@ -307,7 +295,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          // On tablet, show grid instead of list
           BlocBuilder<CarBloc, CarState>(
             builder: (context, state) {
               if (state is CarLoading) {
@@ -320,7 +307,7 @@ class _HomePageState extends State<HomePage> {
                         childCount: 4,
                       ),
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: responsiveGridCount(context, mobile: 1, tablet: 2, desktop: 3),
+                        crossAxisCount: gridCount,
                         childAspectRatio: 0.85,
                         mainAxisSpacing: 12,
                         crossAxisSpacing: 12,
@@ -350,7 +337,7 @@ class _HomePageState extends State<HomePage> {
                         childCount: count,
                       ),
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: responsiveGridCount(context, mobile: 1, tablet: 2, desktop: 3),
+                        crossAxisCount: gridCount,
                         childAspectRatio: 0.85,
                         mainAxisSpacing: 12,
                         crossAxisSpacing: 12,
@@ -370,22 +357,12 @@ class _HomePageState extends State<HomePage> {
               }
               if (state is CarError) {
                 return SliverToBoxAdapter(
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Column(
-                        children: [
-                          const Icon(Icons.error_outline, size: 48, color: Colors.grey),
-                          const SizedBox(height: 8),
-                          Text(state.message),
-                          const SizedBox(height: 8),
-                          TextButton(
-                            onPressed: () => context.read<CarBloc>().add(LoadCars()),
-                            child: const Text('Coba Lagi'),
-                          ),
-                        ],
-                      ),
-                    ),
+                  child: EmptyState(
+                    icon: Icons.error_outline,
+                    title: 'Terjadi Kesalahan',
+                    subtitle: state.message,
+                    buttonText: 'Coba Lagi',
+                    onButtonPressed: () => context.read<CarBloc>().add(LoadCars()),
                   ),
                 );
               }
@@ -414,60 +391,6 @@ class _HomePageState extends State<HomePage> {
           color: isSelected ? AppColors.primary : AppColors.textSecondary,
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
         ),
-      ),
-    );
-  }
-
-  Widget _buildBookingsTab() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey),
-          const SizedBox(height: 16),
-          const Text('Pemesanan Anda'),
-          const SizedBox(height: 8),
-          ElevatedButton(
-            onPressed: () => context.push('/my-bookings'),
-            child: const Text('Lihat Pemesanan'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNotificationsTab() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.notifications_outlined, size: 64, color: Colors.grey),
-          const SizedBox(height: 16),
-          const Text('Notifikasi'),
-          const SizedBox(height: 8),
-          ElevatedButton(
-            onPressed: () => context.push('/notifications'),
-            child: const Text('Lihat Notifikasi'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProfileTab() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.person_outlined, size: 64, color: Colors.grey),
-          const SizedBox(height: 16),
-          const Text('Profil Anda'),
-          const SizedBox(height: 8),
-          ElevatedButton(
-            onPressed: () => context.push('/profile'),
-            child: const Text('Lihat Profil'),
-          ),
-        ],
       ),
     );
   }

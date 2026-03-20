@@ -168,4 +168,21 @@ class PaymentStatus {
         return status;
     }
   }
+
+  static Color color(String status) {
+    switch (status) {
+      case paid:
+        return AppColors.success;
+      case pending:
+        return AppColors.warning;
+      case failed:
+        return AppColors.error;
+      case expired:
+        return AppColors.textSecondary;
+      case refunded:
+        return AppColors.info;
+      default:
+        return AppColors.textSecondary;
+    }
+  }
 }

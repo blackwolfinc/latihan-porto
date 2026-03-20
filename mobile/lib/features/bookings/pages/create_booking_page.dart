@@ -61,6 +61,8 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isTabletDevice = isTablet(context);
+
     return MultiBlocProvider(
       providers: [
         BlocProvider(
@@ -90,68 +92,68 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
             appBar: AppBar(title: const Text('Buat Pemesanan')),
             body: ResponsiveContainer(
               maxWidth: 700,
-              padding: isTablet(context) ? const EdgeInsets.symmetric(vertical: 16) : null,
+              padding: isTabletDevice ? const EdgeInsets.symmetric(vertical: 16) : null,
               child: Stepper(
-                type: isTablet(context) ? StepperType.horizontal : StepperType.vertical,
-              currentStep: _currentStep,
-              onStepContinue: _onStepContinue,
-              onStepCancel: _onStepCancel,
-              onStepTapped: (step) => setState(() => _currentStep = step),
-              controlsBuilder: (context, details) {
-                return Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: details.onStepContinue,
-                          child: Text(_currentStep == 3 ? 'Konfirmasi & Bayar' : 'Lanjut'),
-                        ),
-                      ),
-                      if (_currentStep > 0) ...[
-                        const SizedBox(width: 12),
+                type: isTabletDevice ? StepperType.horizontal : StepperType.vertical,
+                currentStep: _currentStep,
+                onStepContinue: _onStepContinue,
+                onStepCancel: _onStepCancel,
+                onStepTapped: (step) => setState(() => _currentStep = step),
+                controlsBuilder: (context, details) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: Row(
+                      children: [
                         Expanded(
-                          child: OutlinedButton(
-                            onPressed: details.onStepCancel,
-                            child: const Text('Kembali'),
+                          child: ElevatedButton(
+                            onPressed: details.onStepContinue,
+                            child: Text(_currentStep == 3 ? 'Konfirmasi & Bayar' : 'Lanjut'),
                           ),
                         ),
+                        if (_currentStep > 0) ...[
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: details.onStepCancel,
+                              child: const Text('Kembali'),
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
+                  );
+                },
+                steps: [
+                  Step(
+                    title: const Text('Pilih Tanggal'),
+                    subtitle: _startDate != null && _endDate != null
+                        ? Text('${_dateFormat.format(_startDate!)} - ${_dateFormat.format(_endDate!)}')
+                        : null,
+                    isActive: _currentStep >= 0,
+                    state: _currentStep > 0 ? StepState.complete : StepState.indexed,
+                    content: _buildDateStep(),
                   ),
-                );
-              },
-              steps: [
-                Step(
-                  title: const Text('Pilih Tanggal'),
-                  subtitle: _startDate != null && _endDate != null
-                      ? Text('${_dateFormat.format(_startDate!)} - ${_dateFormat.format(_endDate!)}')
-                      : null,
-                  isActive: _currentStep >= 0,
-                  state: _currentStep > 0 ? StepState.complete : StepState.indexed,
-                  content: _buildDateStep(),
-                ),
-                Step(
-                  title: const Text('Lokasi'),
-                  subtitle: _pickupController.text.isNotEmpty ? Text(_pickupController.text) : null,
-                  isActive: _currentStep >= 1,
-                  state: _currentStep > 1 ? StepState.complete : StepState.indexed,
-                  content: _buildLocationStep(),
-                ),
-                Step(
-                  title: const Text('Opsi Driver'),
-                  subtitle: Text(_withDriver ? 'Dengan Sopir' : 'Tanpa Sopir'),
-                  isActive: _currentStep >= 2,
-                  state: _currentStep > 2 ? StepState.complete : StepState.indexed,
-                  content: _buildDriverStep(),
-                ),
-                Step(
-                  title: const Text('Ringkasan'),
-                  isActive: _currentStep >= 3,
-                  content: _buildSummaryStep(),
-                ),
-              ],
-            ),
+                  Step(
+                    title: const Text('Lokasi'),
+                    subtitle: _pickupController.text.isNotEmpty ? Text(_pickupController.text) : null,
+                    isActive: _currentStep >= 1,
+                    state: _currentStep > 1 ? StepState.complete : StepState.indexed,
+                    content: _buildLocationStep(),
+                  ),
+                  Step(
+                    title: const Text('Opsi Driver'),
+                    subtitle: Text(_withDriver ? 'Dengan Sopir' : 'Tanpa Sopir'),
+                    isActive: _currentStep >= 2,
+                    state: _currentStep > 2 ? StepState.complete : StepState.indexed,
+                    content: _buildDriverStep(),
+                  ),
+                  Step(
+                    title: const Text('Ringkasan'),
+                    isActive: _currentStep >= 3,
+                    content: _buildSummaryStep(),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

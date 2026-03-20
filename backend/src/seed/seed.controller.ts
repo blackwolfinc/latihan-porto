@@ -17,23 +17,29 @@ export class SeedController {
 
     const hashedPassword = await bcrypt.hash('password123', 10);
 
-    // Clean existing data
-    await this.prisma.invoiceItem.deleteMany();
-    await this.prisma.invoice.deleteMany();
-    await this.prisma.notification.deleteMany();
-    await this.prisma.gpsLog.deleteMany();
-    await this.prisma.review.deleteMany();
-    await this.prisma.inspection.deleteMany();
-    await this.prisma.contract.deleteMany();
-    await this.prisma.payment.deleteMany();
-    await this.prisma.fuelLog.deleteMany();
-    await this.prisma.maintenanceRecord.deleteMany();
-    await this.prisma.expense.deleteMany();
+    // Clean existing data — leaf tables first (parallelized), then parent tables
+    await Promise.all([
+      this.prisma.invoiceItem.deleteMany(),
+      this.prisma.notification.deleteMany(),
+      this.prisma.gpsLog.deleteMany(),
+      this.prisma.review.deleteMany(),
+      this.prisma.inspection.deleteMany(),
+      this.prisma.contract.deleteMany(),
+      this.prisma.fuelLog.deleteMany(),
+      this.prisma.maintenanceRecord.deleteMany(),
+      this.prisma.expense.deleteMany(),
+      this.prisma.carDocument.deleteMany(),
+      this.prisma.driverDocument.deleteMany(),
+    ]);
+    await Promise.all([
+      this.prisma.invoice.deleteMany(),
+      this.prisma.payment.deleteMany(),
+    ]);
     await this.prisma.booking.deleteMany();
-    await this.prisma.carDocument.deleteMany();
-    await this.prisma.driverDocument.deleteMany();
-    await this.prisma.driver.deleteMany();
-    await this.prisma.car.deleteMany();
+    await Promise.all([
+      this.prisma.driver.deleteMany(),
+      this.prisma.car.deleteMany(),
+    ]);
     await this.prisma.user.deleteMany();
     await this.prisma.branch.deleteMany();
     await this.prisma.organization.deleteMany();

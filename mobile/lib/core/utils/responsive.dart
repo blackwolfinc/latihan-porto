@@ -12,22 +12,21 @@ class Breakpoints {
 /// Device type enum
 enum DeviceType { mobile, tablet, desktop }
 
-/// Get device type from context
-DeviceType getDeviceType(BuildContext context) {
-  final width = MediaQuery.of(context).size.width;
+/// Get device type from screen width
+DeviceType getDeviceTypeFromWidth(double width) {
   if (width >= Breakpoints.desktop) return DeviceType.desktop;
   if (width >= Breakpoints.mobile) return DeviceType.tablet;
   return DeviceType.mobile;
 }
 
-/// Check if current device is tablet or larger
-bool isTablet(BuildContext context) {
-  return MediaQuery.of(context).size.width >= Breakpoints.mobile;
+/// Get device type from context
+DeviceType getDeviceType(BuildContext context) {
+  return getDeviceTypeFromWidth(MediaQuery.of(context).size.width);
 }
 
-/// Check if current device is in landscape
-bool isLandscape(BuildContext context) {
-  return MediaQuery.of(context).orientation == Orientation.landscape;
+/// Check if current device is tablet or larger
+bool isTablet(BuildContext context) {
+  return getDeviceType(context) != DeviceType.mobile;
 }
 
 /// Responsive value based on device type
@@ -55,11 +54,7 @@ class ResponsiveBuilder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return builder(context, getDeviceType(context));
-      },
-    );
+    return builder(context, getDeviceType(context));
   }
 }
 
