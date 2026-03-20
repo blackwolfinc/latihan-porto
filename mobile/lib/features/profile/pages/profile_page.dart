@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/utils/responsive.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_event.dart';
 import '../../auth/bloc/auth_state.dart';
@@ -23,151 +24,156 @@ class ProfilePage extends StatelessWidget {
         builder: (context, state) {
           if (state is AuthAuthenticated) {
             final user = state.user;
+            final isTabletDevice = isTablet(context);
+
             return SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSizes.paddingMD),
-              child: Column(
-                children: [
-                  const SizedBox(height: 16),
-                  // Avatar
-                  Stack(
-                    children: [
-                      CircleAvatar(
-                        radius: AppSizes.avatarLG,
-                        backgroundColor: AppColors.primaryLight,
-                        backgroundImage: user.avatar != null
-                            ? CachedNetworkImageProvider(user.avatar!)
-                            : null,
-                        child: user.avatar == null
-                            ? Text(
-                                user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
-                                style: const TextStyle(
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : null,
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: AppColors.primary,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+              padding: responsivePadding(context),
+              child: ResponsiveContainer(
+                maxWidth: 600,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 16),
+                    // Avatar
+                    Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: isTabletDevice ? 56 : AppSizes.avatarLG,
+                          backgroundColor: AppColors.primaryLight,
+                          backgroundImage: user.avatar != null
+                              ? CachedNetworkImageProvider(user.avatar!)
+                              : null,
+                          child: user.avatar == null
+                              ? Text(
+                                  user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
+                                  style: TextStyle(
+                                    fontSize: isTabletDevice ? 48 : 40,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : null,
                         ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: AppColors.primary,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      user.name,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      user.email,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+                    ),
+                    if (user.phone != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        user.phone!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    user.name,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    user.email,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-                  ),
-                  if (user.phone != null) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      user.phone!,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
-                    ),
-                  ],
-                  const SizedBox(height: 32),
+                    const SizedBox(height: 32),
 
-                  // Menu items
-                  _buildMenuItem(
-                    context,
-                    icon: Icons.person_outline,
-                    title: 'Edit Profil',
-                    onTap: () => context.push('/profile/edit'),
-                  ),
-                  _buildMenuItem(
-                    context,
-                    icon: Icons.verified_user_outlined,
-                    title: 'Verifikasi Identitas',
-                    subtitle: 'KTP & SIM',
-                    onTap: () => context.push('/verification'),
-                  ),
-                  _buildMenuItem(
-                    context,
-                    icon: Icons.description_outlined,
-                    title: 'Dokumen Saya',
-                    onTap: () {},
-                  ),
-                  _buildMenuItem(
-                    context,
-                    icon: Icons.receipt_long_outlined,
-                    title: 'Riwayat Booking',
-                    onTap: () => context.push('/my-bookings'),
-                  ),
-                  if (user.role == 'DRIVER')
+                    // Menu items
                     _buildMenuItem(
                       context,
-                      icon: Icons.dashboard_outlined,
-                      title: 'Dashboard Driver',
-                      onTap: () => context.push('/driver/dashboard'),
+                      icon: Icons.person_outline,
+                      title: 'Edit Profil',
+                      onTap: () => context.push('/profile/edit'),
                     ),
-                  _buildMenuItem(
-                    context,
-                    icon: Icons.settings_outlined,
-                    title: 'Pengaturan',
-                    onTap: () {},
-                  ),
-                  _buildMenuItem(
-                    context,
-                    icon: Icons.help_outline,
-                    title: 'Bantuan',
-                    onTap: () {},
-                  ),
-                  _buildMenuItem(
-                    context,
-                    icon: Icons.info_outline,
-                    title: 'Tentang',
-                    subtitle: 'Versi ${AppConstants.appVersion}',
-                    onTap: () {},
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (dlg) => AlertDialog(
-                            title: const Text('Keluar?'),
-                            content: const Text('Apakah Anda yakin ingin keluar dari akun?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(dlg),
-                                child: const Text('Batal'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(dlg);
-                                  context.read<AuthBloc>().add(LogoutRequested());
-                                },
-                                child: const Text('Keluar', style: TextStyle(color: AppColors.error)),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.logout, color: AppColors.error),
-                      label: const Text('Keluar', style: TextStyle(color: AppColors.error)),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppColors.error),
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.verified_user_outlined,
+                      title: 'Verifikasi Identitas',
+                      subtitle: 'KTP & SIM',
+                      onTap: () => context.push('/verification'),
+                    ),
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.description_outlined,
+                      title: 'Dokumen Saya',
+                      onTap: () {},
+                    ),
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.receipt_long_outlined,
+                      title: 'Riwayat Booking',
+                      onTap: () => context.push('/my-bookings'),
+                    ),
+                    if (user.role == 'DRIVER')
+                      _buildMenuItem(
+                        context,
+                        icon: Icons.dashboard_outlined,
+                        title: 'Dashboard Driver',
+                        onTap: () => context.push('/driver/dashboard'),
+                      ),
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.settings_outlined,
+                      title: 'Pengaturan',
+                      onTap: () {},
+                    ),
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.help_outline,
+                      title: 'Bantuan',
+                      onTap: () {},
+                    ),
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.info_outline,
+                      title: 'Tentang',
+                      subtitle: 'Versi ${AppConstants.appVersion}',
+                      onTap: () {},
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (dlg) => AlertDialog(
+                              title: const Text('Keluar?'),
+                              content: const Text('Apakah Anda yakin ingin keluar dari akun?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(dlg),
+                                  child: const Text('Batal'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(dlg);
+                                    context.read<AuthBloc>().add(LogoutRequested());
+                                  },
+                                  child: const Text('Keluar', style: TextStyle(color: AppColors.error)),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.logout, color: AppColors.error),
+                        label: const Text('Keluar', style: TextStyle(color: AppColors.error)),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: AppColors.error),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 32),
-                ],
+                    const SizedBox(height: 32),
+                  ],
+                ),
               ),
             );
           }

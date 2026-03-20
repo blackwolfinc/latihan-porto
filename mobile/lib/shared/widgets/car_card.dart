@@ -141,7 +141,6 @@ class CarCard extends StatelessWidget {
 
   Widget _buildCompactCard(BuildContext context) {
     return SizedBox(
-      width: 200,
       child: Card(
         margin: const EdgeInsets.only(right: 12),
         child: InkWell(

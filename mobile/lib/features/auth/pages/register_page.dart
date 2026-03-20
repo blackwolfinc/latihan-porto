@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/utils/responsive.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -86,9 +87,12 @@ class _RegisterPageState extends State<RegisterPage> {
           }
         },
         child: SafeArea(
-          child: SingleChildScrollView(
+          child: Center(
+            child: SingleChildScrollView(
             padding: const EdgeInsets.all(AppSizes.paddingLG),
-            child: Form(
+            child: ResponsiveContainer(
+              maxWidth: 480,
+              child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -285,6 +289,8 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                 ],
               ),
+            ),
+            ),
             ),
           ),
         ),

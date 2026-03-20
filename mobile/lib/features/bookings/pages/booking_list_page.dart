@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/utils/responsive.dart';
 import '../../../shared/widgets/booking_card.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/loading_shimmer.dart';
@@ -53,6 +54,10 @@ class _BookingListViewState extends State<_BookingListView> with SingleTickerPro
 
   @override
   Widget build(BuildContext context) {
+    final isTabletDevice = isTablet(context);
+    final hPadding = responsiveHorizontalPadding(context);
+    final gridCount = responsiveGridCount(context, mobile: 1, tablet: 2, desktop: 3);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pemesanan Saya'),
@@ -69,6 +74,19 @@ class _BookingListViewState extends State<_BookingListView> with SingleTickerPro
       body: BlocBuilder<BookingBloc, BookingState>(
         builder: (context, state) {
           if (state is BookingLoading) {
+            if (isTabletDevice) {
+              return GridView.builder(
+                padding: EdgeInsets.all(hPadding),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: gridCount,
+                  childAspectRatio: 1.6,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                ),
+                itemCount: 4,
+                itemBuilder: (_, __) => const BookingCardShimmer(),
+              );
+            }
             return ListView.builder(
               padding: const EdgeInsets.all(AppSizes.paddingSM),
               itemCount: 5,
@@ -89,16 +107,33 @@ class _BookingListViewState extends State<_BookingListView> with SingleTickerPro
                       LoadBookings(status: _tabStatuses[_tabController.index]),
                     );
               },
-              child: ListView.builder(
-                padding: const EdgeInsets.all(AppSizes.paddingSM),
-                itemCount: state.bookings.length,
-                itemBuilder: (context, index) {
-                  return BookingCard(
-                    booking: state.bookings[index],
-                    onTap: () => context.push('/bookings/${state.bookings[index].id}'),
-                  );
-                },
-              ),
+              child: isTabletDevice
+                  ? GridView.builder(
+                      padding: EdgeInsets.all(hPadding),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: gridCount,
+                        childAspectRatio: 1.6,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                      ),
+                      itemCount: state.bookings.length,
+                      itemBuilder: (context, index) {
+                        return BookingCard(
+                          booking: state.bookings[index],
+                          onTap: () => context.push('/bookings/${state.bookings[index].id}'),
+                        );
+                      },
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(AppSizes.paddingSM),
+                      itemCount: state.bookings.length,
+                      itemBuilder: (context, index) {
+                        return BookingCard(
+                          booking: state.bookings[index],
+                          onTap: () => context.push('/bookings/${state.bookings[index].id}'),
+                        );
+                      },
+                    ),
             );
           }
           if (state is BookingError) {

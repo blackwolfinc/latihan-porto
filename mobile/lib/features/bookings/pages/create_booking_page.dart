@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/utils/responsive.dart';
 import '../../../shared/models/car.dart';
 import '../../cars/bloc/car_bloc.dart';
 import '../../cars/bloc/car_event.dart';
@@ -87,7 +88,11 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
           },
           child: Scaffold(
             appBar: AppBar(title: const Text('Buat Pemesanan')),
-            body: Stepper(
+            body: ResponsiveContainer(
+              maxWidth: 700,
+              padding: isTablet(context) ? const EdgeInsets.symmetric(vertical: 16) : null,
+              child: Stepper(
+                type: isTablet(context) ? StepperType.horizontal : StepperType.vertical,
               currentStep: _currentStep,
               onStepContinue: _onStepContinue,
               onStepCancel: _onStepCancel,
@@ -146,6 +151,7 @@ class _CreateBookingPageState extends State<CreateBookingPage> {
                   content: _buildSummaryStep(),
                 ),
               ],
+            ),
             ),
           ),
         ),

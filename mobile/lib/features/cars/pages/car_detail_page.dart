@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/utils/responsive.dart';
 import '../../../shared/models/car.dart';
 import '../../../shared/models/review.dart';
 import '../../../shared/widgets/status_badge.dart';
@@ -80,6 +81,181 @@ class _CarDetailViewState extends State<_CarDetailView> {
   }
 
   Widget _buildDetailView(BuildContext context, Car car, List<Review> reviews) {
+    final isTabletDevice = isTablet(context);
+
+    if (isTabletDevice) {
+      return _buildTabletDetailView(context, car, reviews);
+    }
+    return _buildMobileDetailView(context, car, reviews);
+  }
+
+  Widget _buildTabletDetailView(BuildContext context, Car car, List<Review> reviews) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(car.name),
+        actions: [
+          if (car.status == 'AVAILABLE')
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: ElevatedButton.icon(
+                onPressed: () => context.push('/bookings/create?carId=${car.id}'),
+                icon: const Icon(Icons.book_online),
+                label: const Text('Pesan Sekarang'),
+              ),
+            ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: responsivePadding(context),
+        child: ResponsiveContainer(
+          maxWidth: 1100,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Left: Image gallery
+              Expanded(
+                flex: 5,
+                child: Column(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(AppSizes.radiusLG),
+                      child: AspectRatio(
+                        aspectRatio: 4 / 3,
+                        child: _buildImageCarousel(car),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // Price card
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(AppSizes.paddingMD),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(AppSizes.radiusMD),
+                        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Harga Sewa',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            car.formattedPricePerDay,
+                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 32),
+              // Right: Details
+              Expanded(
+                flex: 5,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            car.name,
+                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                        ),
+                        StatusBadge(
+                          label: car.status == 'AVAILABLE' ? 'Tersedia' : 'Tidak Tersedia',
+                          color: car.status == 'AVAILABLE' ? AppColors.success : AppColors.error,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Tahun ${car.year} - ${car.plateNumber}',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                    ),
+                    if (car.rating != null) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.star, color: Colors.amber, size: 20),
+                          const SizedBox(width: 4),
+                          Text(
+                            car.rating!.toStringAsFixed(1),
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                          if (car.reviewCount != null)
+                            Text(
+                              ' (${car.reviewCount} ulasan)',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                            ),
+                        ],
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    Text(
+                      'Spesifikasi',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildSpecsGrid(context, car),
+                    const SizedBox(height: 24),
+                    if (car.description != null && car.description!.isNotEmpty) ...[
+                      Text(
+                        'Deskripsi',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        car.description!,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                    if (reviews.isNotEmpty) ...[
+                      Text(
+                        'Ulasan (${reviews.length})',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: 12),
+                      ...reviews.take(5).map((review) => _buildReviewCard(context, review)),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileDetailView(BuildContext context, Car car, List<Review> reviews) {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -94,58 +270,7 @@ class _CarDetailViewState extends State<_CarDetailView> {
               onPressed: () => Navigator.of(context).maybePop(),
             ),
             flexibleSpace: FlexibleSpaceBar(
-              background: car.images.isNotEmpty
-                  ? Stack(
-                      children: [
-                        PageView.builder(
-                          controller: _pageController,
-                          itemCount: car.images.length,
-                          onPageChanged: (index) {
-                            setState(() => _currentImageIndex = index);
-                          },
-                          itemBuilder: (context, index) {
-                            return CachedNetworkImage(
-                              imageUrl: car.images[index],
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => Container(
-                                color: AppColors.shimmerBase,
-                                child: const Center(child: CircularProgressIndicator()),
-                              ),
-                              errorWidget: (context, url, error) => Container(
-                                color: AppColors.shimmerBase,
-                                child: const Icon(Icons.directions_car, size: 80, color: Colors.grey),
-                              ),
-                            );
-                          },
-                        ),
-                        if (car.images.length > 1)
-                          Positioned(
-                            bottom: 16,
-                            left: 0,
-                            right: 0,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: List.generate(car.images.length, (index) {
-                                return Container(
-                                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                                  width: _currentImageIndex == index ? 20 : 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(4),
-                                    color: _currentImageIndex == index
-                                        ? Colors.white
-                                        : Colors.white.withOpacity(0.5),
-                                  ),
-                                );
-                              }),
-                            ),
-                          ),
-                      ],
-                    )
-                  : Container(
-                      color: AppColors.shimmerBase,
-                      child: const Icon(Icons.directions_car, size: 80, color: Colors.grey),
-                    ),
+              background: _buildImageCarousel(car),
             ),
           ),
           SliverToBoxAdapter(
@@ -290,6 +415,63 @@ class _CarDetailViewState extends State<_CarDetailView> {
     );
   }
 
+  Widget _buildImageCarousel(Car car) {
+    if (car.images.isEmpty) {
+      return Container(
+        color: AppColors.shimmerBase,
+        child: const Icon(Icons.directions_car, size: 80, color: Colors.grey),
+      );
+    }
+
+    return Stack(
+      children: [
+        PageView.builder(
+          controller: _pageController,
+          itemCount: car.images.length,
+          onPageChanged: (index) {
+            setState(() => _currentImageIndex = index);
+          },
+          itemBuilder: (context, index) {
+            return CachedNetworkImage(
+              imageUrl: car.images[index],
+              fit: BoxFit.cover,
+              placeholder: (context, url) => Container(
+                color: AppColors.shimmerBase,
+                child: const Center(child: CircularProgressIndicator()),
+              ),
+              errorWidget: (context, url, error) => Container(
+                color: AppColors.shimmerBase,
+                child: const Icon(Icons.directions_car, size: 80, color: Colors.grey),
+              ),
+            );
+          },
+        ),
+        if (car.images.length > 1)
+          Positioned(
+            bottom: 16,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(car.images.length, (index) {
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: _currentImageIndex == index ? 20 : 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(4),
+                    color: _currentImageIndex == index
+                        ? Colors.white
+                        : Colors.white.withOpacity(0.5),
+                  ),
+                );
+              }),
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _buildSpecsGrid(BuildContext context, Car car) {
     final specs = [
       {'icon': Icons.category, 'label': 'Kategori', 'value': car.category},
@@ -299,11 +481,13 @@ class _CarDetailViewState extends State<_CarDetailView> {
       {'icon': Icons.palette, 'label': 'Warna', 'value': car.color},
     ];
 
+    final crossAxisCount = responsive<int>(context, mobile: 3, tablet: 5);
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
         childAspectRatio: 1.2,
         mainAxisSpacing: 8,
         crossAxisSpacing: 8,

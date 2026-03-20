@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/utils/responsive.dart';
 import '../../../shared/widgets/status_badge.dart';
 import '../bloc/booking_bloc.dart';
 import '../bloc/booking_event.dart';
@@ -31,6 +32,7 @@ class _BookingDetailView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('dd MMM yyyy, HH:mm');
+    final isTabletDevice = isTablet(context);
 
     return BlocConsumer<BookingBloc, BookingState>(
       listener: (context, state) {
@@ -60,194 +62,73 @@ class _BookingDetailView extends StatelessWidget {
           return Scaffold(
             appBar: AppBar(title: const Text('Detail Pemesanan')),
             body: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSizes.paddingMD),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Status timeline
-                  _buildStatusTimeline(context, booking.status),
-                  const SizedBox(height: 20),
+              padding: responsivePadding(context),
+              child: ResponsiveContainer(
+                maxWidth: 900,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Status timeline
+                    _buildStatusTimeline(context, booking.status),
+                    const SizedBox(height: 20),
 
-                  // Car info
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSizes.paddingMD),
-                      child: Row(
+                    // Tablet: side-by-side layout for cards
+                    if (isTabletDevice)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: AppColors.shimmerBase,
-                              borderRadius: BorderRadius.circular(AppSizes.radiusSM),
-                            ),
-                            child: const Icon(Icons.directions_car, color: Colors.grey),
-                          ),
-                          const SizedBox(width: 12),
                           Expanded(
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  booking.car?.name ?? 'Mobil',
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                ),
-                                if (booking.car != null)
-                                  Text(
-                                    '${booking.car!.category} - ${booking.car!.plateNumber}',
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                          color: AppColors.textSecondary,
-                                        ),
-                                  ),
+                                _buildCarInfoCard(context, booking),
+                                const SizedBox(height: 12),
+                                _buildDatesCard(context, booking, dateFormat),
                               ],
                             ),
                           ),
-                          StatusBadge(
-                            label: BookingStatus.label(booking.status),
-                            color: BookingStatus.color(booking.status),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Dates & locations
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSizes.paddingMD),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Tanggal & Lokasi',
-                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                          const SizedBox(height: 12),
-                          _buildInfoRow(context, Icons.calendar_today, 'Mulai',
-                              dateFormat.format(booking.startDate)),
-                          const SizedBox(height: 8),
-                          _buildInfoRow(context, Icons.calendar_today, 'Selesai',
-                              dateFormat.format(booking.endDate)),
-                          const Divider(height: 20),
-                          _buildInfoRow(
-                              context, Icons.location_on, 'Penjemputan', booking.pickupLocation),
-                          const SizedBox(height: 8),
-                          _buildInfoRow(
-                              context, Icons.flag, 'Pengembalian', booking.dropoffLocation),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Driver info
-                  if (booking.withDriver)
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppSizes.paddingMD),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Informasi Sopir',
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
                               children: [
-                                CircleAvatar(
-                                  radius: 24,
-                                  backgroundColor: AppColors.primaryLight,
-                                  child: const Icon(Icons.person, color: Colors.white),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        booking.driver?.displayName ?? 'Menunggu penugasan',
-                                        style: const TextStyle(fontWeight: FontWeight.w600),
-                                      ),
-                                      if (booking.driver != null)
-                                        Row(
-                                          children: [
-                                            const Icon(Icons.star, color: Colors.amber, size: 16),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              booking.driver!.rating.toStringAsFixed(1),
-                                              style: Theme.of(context).textTheme.bodySmall,
-                                            ),
-                                          ],
-                                        ),
-                                    ],
-                                  ),
-                                ),
+                                if (booking.withDriver) ...[
+                                  _buildDriverCard(context, booking),
+                                  const SizedBox(height: 12),
+                                ],
+                                _buildPaymentCard(context, booking),
                               ],
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: 12),
-
-                  // Payment
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSizes.paddingMD),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Pembayaran',
-                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text('Status'),
-                              StatusBadge(
-                                label: PaymentStatus.label(booking.paymentStatus),
-                                color: booking.paymentStatus == 'PAID'
-                                    ? AppColors.success
-                                    : AppColors.warning,
-                              ),
-                            ],
-                          ),
-                          const Divider(height: 20),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text('Total'),
-                              Text(
-                                booking.formattedTotalPrice,
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      color: AppColors.primary,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                            ],
                           ),
                         ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
+                      )
+                    else ...[
+                      _buildCarInfoCard(context, booking),
+                      const SizedBox(height: 12),
+                      _buildDatesCard(context, booking, dateFormat),
+                      const SizedBox(height: 12),
+                      if (booking.withDriver) ...[
+                        _buildDriverCard(context, booking),
+                        const SizedBox(height: 12),
+                      ],
+                      _buildPaymentCard(context, booking),
+                    ],
+                    const SizedBox(height: 24),
 
-                  // Action buttons
-                  ..._buildActionButtons(context, booking.status, booking.id),
-                  const SizedBox(height: 24),
-                ],
+                    // Action buttons
+                    if (isTabletDevice)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: _buildActionButtons(context, booking.status, booking.id)
+                            .map((w) => Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                                  child: w,
+                                ))
+                            .toList(),
+                      )
+                    else
+                      ..._buildActionButtons(context, booking.status, booking.id),
+                    const SizedBox(height: 24),
+                  ],
+                ),
               ),
             ),
           );
@@ -257,6 +138,181 @@ class _BookingDetailView extends StatelessWidget {
           body: const SizedBox.shrink(),
         );
       },
+    );
+  }
+
+  Widget _buildCarInfoCard(BuildContext context, dynamic booking) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSizes.paddingMD),
+        child: Row(
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: AppColors.shimmerBase,
+                borderRadius: BorderRadius.circular(AppSizes.radiusSM),
+              ),
+              child: const Icon(Icons.directions_car, color: Colors.grey),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    booking.car?.name ?? 'Mobil',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  if (booking.car != null)
+                    Text(
+                      '${booking.car!.category} - ${booking.car!.plateNumber}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                    ),
+                ],
+              ),
+            ),
+            StatusBadge(
+              label: BookingStatus.label(booking.status),
+              color: BookingStatus.color(booking.status),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDatesCard(BuildContext context, dynamic booking, DateFormat dateFormat) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSizes.paddingMD),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Tanggal & Lokasi',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            _buildInfoRow(context, Icons.calendar_today, 'Mulai',
+                dateFormat.format(booking.startDate)),
+            const SizedBox(height: 8),
+            _buildInfoRow(context, Icons.calendar_today, 'Selesai',
+                dateFormat.format(booking.endDate)),
+            const Divider(height: 20),
+            _buildInfoRow(
+                context, Icons.location_on, 'Penjemputan', booking.pickupLocation),
+            const SizedBox(height: 8),
+            _buildInfoRow(
+                context, Icons.flag, 'Pengembalian', booking.dropoffLocation),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDriverCard(BuildContext context, dynamic booking) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSizes.paddingMD),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Informasi Sopir',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: AppColors.primaryLight,
+                  child: const Icon(Icons.person, color: Colors.white),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        booking.driver?.displayName ?? 'Menunggu penugasan',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      if (booking.driver != null)
+                        Row(
+                          children: [
+                            const Icon(Icons.star, color: Colors.amber, size: 16),
+                            const SizedBox(width: 4),
+                            Text(
+                              booking.driver!.rating.toStringAsFixed(1),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPaymentCard(BuildContext context, dynamic booking) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSizes.paddingMD),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Pembayaran',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Status'),
+                StatusBadge(
+                  label: PaymentStatus.label(booking.paymentStatus),
+                  color: booking.paymentStatus == 'PAID'
+                      ? AppColors.success
+                      : AppColors.warning,
+                ),
+              ],
+            ),
+            const Divider(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Total'),
+                Text(
+                  booking.formattedTotalPrice,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 

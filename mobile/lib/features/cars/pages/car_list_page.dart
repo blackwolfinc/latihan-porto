@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/utils/responsive.dart';
 import '../../../shared/widgets/car_card.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/loading_shimmer.dart';
@@ -31,6 +32,10 @@ class _CarListPageState extends State<CarListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isTabletDevice = isTablet(context);
+    final hPadding = responsiveHorizontalPadding(context);
+    final gridCount = responsiveGridCount(context, mobile: 1, tablet: 2, desktop: 3);
+
     return BlocProvider(
       create: (_) => CarBloc(apiClient: ApiClient())..add(const LoadCars()),
       child: Scaffold(
@@ -46,38 +51,41 @@ class _CarListPageState extends State<CarListPage> {
         body: Column(
           children: [
             Container(
-              padding: const EdgeInsets.all(AppSizes.paddingMD),
+              padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: AppSizes.paddingMD),
               color: Colors.white,
               child: Column(
                 children: [
-                  Builder(
-                    builder: (context) {
-                      return TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText: 'Cari mobil...',
-                          prefixIcon: const Icon(Icons.search),
-                          suffixIcon: _searchController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    context.read<CarBloc>().add(const LoadCars());
-                                    setState(() {});
-                                  },
-                                )
-                              : null,
-                        ),
-                        onSubmitted: (value) {
-                          context.read<CarBloc>().add(LoadCars(
-                                search: value,
-                                category: _selectedCategory,
-                                sortBy: _sortBy,
-                              ));
-                        },
-                        onChanged: (_) => setState(() {}),
-                      );
-                    },
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 600),
+                    child: Builder(
+                      builder: (context) {
+                        return TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText: 'Cari mobil...',
+                            prefixIcon: const Icon(Icons.search),
+                            suffixIcon: _searchController.text.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      context.read<CarBloc>().add(const LoadCars());
+                                      setState(() {});
+                                    },
+                                  )
+                                : null,
+                          ),
+                          onSubmitted: (value) {
+                            context.read<CarBloc>().add(LoadCars(
+                                  search: value,
+                                  category: _selectedCategory,
+                                  sortBy: _sortBy,
+                                ));
+                          },
+                          onChanged: (_) => setState(() {}),
+                        );
+                      },
+                    ),
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
@@ -101,6 +109,19 @@ class _CarListPageState extends State<CarListPage> {
               child: BlocBuilder<CarBloc, CarState>(
                 builder: (context, state) {
                   if (state is CarLoading) {
+                    if (isTabletDevice) {
+                      return GridView.builder(
+                        padding: EdgeInsets.all(hPadding),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: gridCount,
+                          childAspectRatio: 0.85,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                        ),
+                        itemCount: 6,
+                        itemBuilder: (_, __) => const CarCardShimmer(),
+                      );
+                    }
                     return ListView.builder(
                       padding: const EdgeInsets.all(AppSizes.paddingSM),
                       itemCount: 5,
@@ -113,6 +134,24 @@ class _CarListPageState extends State<CarListPage> {
                         icon: Icons.directions_car_outlined,
                         title: 'Tidak ada mobil ditemukan',
                         subtitle: 'Coba ubah filter pencarian Anda',
+                      );
+                    }
+                    if (isTabletDevice) {
+                      return GridView.builder(
+                        padding: EdgeInsets.all(hPadding),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: gridCount,
+                          childAspectRatio: 0.85,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                        ),
+                        itemCount: state.cars.length,
+                        itemBuilder: (context, index) {
+                          return CarCard(
+                            car: state.cars[index],
+                            onTap: () => context.push('/cars/${state.cars[index].id}'),
+                          );
+                        },
                       );
                     }
                     return ListView.builder(
@@ -172,6 +211,7 @@ class _CarListPageState extends State<CarListPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      constraints: const BoxConstraints(maxWidth: 500),
       builder: (sheetContext) => Padding(
         padding: const EdgeInsets.all(AppSizes.paddingMD),
         child: Column(
