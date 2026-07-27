@@ -1,0 +1,3 @@
+# Satu-satunya dependency eksternal (bagian 3 CLAUDE.md).
+# Dipakai sebagai klien OpenAI-compatible untuk DeepSeek.
+openai>=1.40.0

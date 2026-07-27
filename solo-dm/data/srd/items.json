@@ -1,0 +1,42 @@
+{
+  "pedang-panjang": {
+    "name": "Pedang Panjang", "kind": "weapon", "weight": 3, "damage": "1d8",
+    "description": "Bilah baja seimbang, andalan para petarung."
+  },
+  "belati": {
+    "name": "Belati", "kind": "weapon", "weight": 1, "damage": "1d4",
+    "description": "Pisau ramping, cepat dan mudah disembunyikan."
+  },
+  "gada": {
+    "name": "Gada", "kind": "weapon", "weight": 4, "damage": "1d6",
+    "description": "Pemukul berat berkepala logam."
+  },
+  "tongkat-sihir": {
+    "name": "Tongkat Sihir", "kind": "weapon", "weight": 2, "damage": "1d6",
+    "description": "Tongkat kayu tua yang berdengung samar oleh mana."
+  },
+  "baju-zirah-kulit": {
+    "name": "Baju Zirah Kulit", "kind": "armor", "weight": 10, "ac_base": 11,
+    "description": "Kulit tebal yang dikeraskan, ringan dan lentur."
+  },
+  "baju-zirah-rantai": {
+    "name": "Baju Zirah Rantai", "kind": "armor", "weight": 40, "ac_base": 13,
+    "description": "Anyaman cincin logam yang menahan tebasan."
+  },
+  "perisai": {
+    "name": "Perisai", "kind": "shield", "weight": 6, "ac_bonus": 2,
+    "description": "Perisai kayu berlapis besi."
+  },
+  "ramuan-penyembuh": {
+    "name": "Ramuan Penyembuh", "kind": "consumable", "weight": 0.5, "damage": "2d4",
+    "description": "Cairan merah yang memulihkan luka saat diminum."
+  },
+  "obor": {
+    "name": "Obor", "kind": "misc", "weight": 1,
+    "description": "Sepotong kayu berbalut kain ter, menyala terang."
+  },
+  "ransum": {
+    "name": "Ransum", "kind": "consumable", "weight": 2,
+    "description": "Bekal makanan kering untuk satu hari perjalanan."
+  }
+}

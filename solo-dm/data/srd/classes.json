@@ -1,0 +1,38 @@
+{
+  "fighter": {
+    "name": "Petarung",
+    "hit_die": 10,
+    "base_hp": 10,
+    "primary": ["str", "con"],
+    "proficiencies": ["athletics", "intimidation"],
+    "starting_gold": 60,
+    "starting_items": ["pedang-panjang", "perisai", "baju-zirah-kulit", "ransum"]
+  },
+  "rogue": {
+    "name": "Bandit",
+    "hit_die": 8,
+    "base_hp": 8,
+    "primary": ["dex", "cha"],
+    "proficiencies": ["stealth", "sleight_of_hand", "perception", "deception"],
+    "starting_gold": 40,
+    "starting_items": ["belati", "baju-zirah-kulit", "ransum", "obor"]
+  },
+  "wizard": {
+    "name": "Penyihir",
+    "hit_die": 6,
+    "base_hp": 6,
+    "primary": ["int", "wis"],
+    "proficiencies": ["arcana", "investigation", "history"],
+    "starting_gold": 30,
+    "starting_items": ["tongkat-sihir", "belati", "ramuan-penyembuh"]
+  },
+  "cleric": {
+    "name": "Pendeta",
+    "hit_die": 8,
+    "base_hp": 8,
+    "primary": ["wis", "con"],
+    "proficiencies": ["medicine", "religion", "insight"],
+    "starting_gold": 45,
+    "starting_items": ["gada", "perisai", "baju-zirah-kulit", "ramuan-penyembuh"]
+  }
+}

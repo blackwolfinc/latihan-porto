@@ -1,0 +1,23 @@
+{
+  "goblin": {
+    "name": "Goblin", "hp": 7, "ac": 15, "attack_bonus": 4, "damage": "1d6+2", "xp": 50
+  },
+  "serigala": {
+    "name": "Serigala", "hp": 11, "ac": 13, "attack_bonus": 4, "damage": "2d4+2", "xp": 50
+  },
+  "kerangka": {
+    "name": "Kerangka", "hp": 13, "ac": 13, "attack_bonus": 4, "damage": "1d6+2", "xp": 50
+  },
+  "bandit": {
+    "name": "Bandit", "hp": 11, "ac": 12, "attack_bonus": 3, "damage": "1d6+1", "xp": 25
+  },
+  "orc": {
+    "name": "Orc", "hp": 15, "ac": 13, "attack_bonus": 5, "damage": "1d12+3", "xp": 100
+  },
+  "beruang-hitam": {
+    "name": "Beruang Hitam", "hp": 34, "ac": 11, "attack_bonus": 3, "damage": "2d6+2", "xp": 200
+  },
+  "laba-laba-raksasa": {
+    "name": "Laba-laba Raksasa", "hp": 26, "ac": 14, "attack_bonus": 5, "damage": "1d8+3", "xp": 200
+  }
+}
